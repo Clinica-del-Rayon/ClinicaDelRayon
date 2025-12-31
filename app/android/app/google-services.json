@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "60470175956",
+    "project_id": "clinica-del-rayon",
+    "storage_bucket": "clinica-del-rayon.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:60470175956:android:117b1486c6a266ae267341",
+        "android_client_info": {
+          "package_name": "com.cdr.clinica_del_rayon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnQ-37pvtBZSWipz_KAmkcuZWsXj33lpE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
