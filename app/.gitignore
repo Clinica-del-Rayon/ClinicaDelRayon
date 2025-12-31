@@ -43,3 +43,30 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ============================================
+# Configuración personalizada del proyecto
+# ============================================
+
+# Archivos de documentación temporal
+SOLUCION_GIT_403.md
+SOLUCION_SDK_34.md
+firebase_example.dart
+
+# Scripts de configuración temporal (en la raíz del repo)
+../configure-git.ps1
+../README-CONFIGURACION-TOKEN.md
+
+# IMPORTANTE: Archivos de configuración de Firebase
+# Estos archivos contienen las claves de tu proyecto
+# OPCIÓN 1 (Recomendada para equipos pequeños): Subirlos a Git
+#   - Más fácil de compartir con el equipo
+#   - No requiere configuración adicional
+#   - Úsalo si confías en todos los colaboradores
+# OPCIÓN 2 (Más segura): NO subirlos a Git
+#   - Cada desarrollador debe descargarlos de Firebase Console
+#   - Descomenta las siguientes líneas:
+# android/app/google-services.json
+# ios/Runner/GoogleService-Info.plist
+# lib/firebase_options.dart
+
