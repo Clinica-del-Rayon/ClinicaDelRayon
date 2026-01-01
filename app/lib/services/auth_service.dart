@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'database_service.dart';
+import '../models/usuario.dart' as models;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseService _dbService = DatabaseService();
 
   // Stream de cambios de autenticación
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -9,19 +12,105 @@ class AuthService {
   // Usuario actual
   User? get currentUser => _auth.currentUser;
 
-  // Registro con email y contraseña
-  Future<UserCredential?> registerWithEmailAndPassword({
-    required String email,
-    required String password,
+  // Obtener datos del usuario actual desde la base de datos
+  Future<models.Usuario?> getCurrentUserData() async {
+    if (currentUser == null) return null;
+    return await _dbService.getUsuario(currentUser!.uid);
+  }
+
+  // Obtener rol del usuario actual
+  Future<models.RolUsuario?> getCurrentUserRole() async {
+    if (currentUser == null) return null;
+    return await _dbService.getRolUsuario(currentUser!.uid);
+  }
+
+  // Registro de Cliente con email y contraseña
+  Future<UserCredential?> registerCliente({
+    required models.Cliente cliente,
   }) async {
     try {
+      // Crear usuario en Firebase Auth
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+        email: cliente.correo,
+        password: cliente.password!,
       );
+
+      // Actualizar el UID del cliente con el UID de Firebase Auth
+      final clienteConUid = models.Cliente(
+        uid: userCredential.user!.uid,
+        nombres: cliente.nombres,
+        apellidos: cliente.apellidos,
+        tipoDocumento: cliente.tipoDocumento,
+        numeroDocumento: cliente.numeroDocumento,
+        correo: cliente.correo,
+        telefono: cliente.telefono,
+        direccion: cliente.direccion,
+        calificacion: cliente.calificacion,
+        fotoPerfil: cliente.fotoPerfil,
+      );
+
+      // Guardar datos del cliente en Realtime Database
+      await _dbService.createCliente(clienteConUid);
+
+      // Actualizar el displayName en Firebase Auth
+      await userCredential.user?.updateDisplayName(
+        '${cliente.nombres} ${cliente.apellidos}',
+      );
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Error al registrar cliente: ${e.toString()}';
+    }
+  }
+
+  // Registro de Trabajador con email y contraseña (solo para ADMIN)
+  Future<UserCredential?> registerTrabajador({
+    required models.Trabajador trabajador,
+  }) async {
+    try {
+      // Verificar que el usuario actual sea ADMIN
+      final currentUserRole = await getCurrentUserRole();
+      if (currentUserRole != models.RolUsuario.ADMIN) {
+        throw 'Solo los administradores pueden crear trabajadores.';
+      }
+
+      // Crear usuario en Firebase Auth
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: trabajador.correo,
+        password: trabajador.password!,
+      );
+
+      // Actualizar el UID del trabajador con el UID de Firebase Auth
+      final trabajadorConUid = models.Trabajador(
+        uid: userCredential.user!.uid,
+        nombres: trabajador.nombres,
+        apellidos: trabajador.apellidos,
+        tipoDocumento: trabajador.tipoDocumento,
+        numeroDocumento: trabajador.numeroDocumento,
+        correo: trabajador.correo,
+        telefono: trabajador.telefono,
+        area: trabajador.area,
+        sueldo: trabajador.sueldo,
+        estadoDisponibilidad: trabajador.estadoDisponibilidad,
+        calificacion: trabajador.calificacion,
+        fotoPerfil: trabajador.fotoPerfil,
+      );
+
+      // Guardar datos del trabajador en Realtime Database
+      await _dbService.createTrabajador(trabajadorConUid);
+
+      // Actualizar el displayName en Firebase Auth
+      await userCredential.user?.updateDisplayName(
+        '${trabajador.nombres} ${trabajador.apellidos}',
+      );
+
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Error al registrar trabajador: ${e.toString()}';
     }
   }
 
@@ -89,4 +178,3 @@ class AuthService {
     }
   }
 }
-

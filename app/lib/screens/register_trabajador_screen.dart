@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../models/usuario.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class RegisterTrabajadorScreen extends StatefulWidget {
+  const RegisterTrabajadorScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<RegisterTrabajadorScreen> createState() => _RegisterTrabajadorScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterTrabajadorScreenState extends State<RegisterTrabajadorScreen> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
   final _nombresController = TextEditingController();
@@ -17,14 +17,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _numeroDocumentoController = TextEditingController();
   final _correoController = TextEditingController();
   final _telefonoController = TextEditingController();
-  final _direccionController = TextEditingController();
+  final _areaController = TextEditingController();
+  final _sueldoController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _estadoDisponibilidad = true;
   TipoDocumento _tipoDocumento = TipoDocumento.CC;
+
+  final List<String> _areasDisponibles = [
+    'Mecánico',
+    'Pintura',
+    'Electricidad',
+    'Tapicería',
+    'Latonería',
+    'Diagnóstico',
+    'Lavado',
+    'Otro',
+  ];
 
   @override
   void dispose() {
@@ -33,7 +46,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _numeroDocumentoController.dispose();
     _correoController.dispose();
     _telefonoController.dispose();
-    _direccionController.dispose();
+    _areaController.dispose();
+    _sueldoController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -45,8 +59,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Crear objeto Cliente con todos los datos
-      final cliente = Cliente(
+      // Crear objeto Trabajador con todos los datos
+      final trabajador = Trabajador(
         uid: '', // Se actualizará con el UID de Firebase Auth
         nombres: _nombresController.text.trim(),
         apellidos: _apellidosController.text.trim(),
@@ -54,21 +68,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
         numeroDocumento: _numeroDocumentoController.text.trim(),
         correo: _correoController.text.trim(),
         telefono: _telefonoController.text.trim(),
-        direccion: _direccionController.text.trim(),
+        area: _areaController.text.trim(),
+        sueldo: double.tryParse(_sueldoController.text) ?? 0.0,
+        estadoDisponibilidad: _estadoDisponibilidad,
         password: _passwordController.text,
       );
 
-      // Registrar cliente (crea en Auth y Realtime Database)
-      await _authService.registerCliente(cliente: cliente);
+      // Registrar trabajador (crea en Auth y Realtime Database)
+      await _authService.registerTrabajador(trabajador: trabajador);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Cuenta creada exitosamente'),
+            content: Text('Trabajador creado exitosamente'),
             backgroundColor: Colors.green,
           ),
         );
-        // Volver a la pantalla de login
+        // Volver a la pantalla anterior
         Navigator.pop(context);
       }
     } catch (e) {
@@ -91,7 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crear Cuenta de Cliente'),
+        title: const Text('Crear Cuenta de Trabajador'),
       ),
       body: SafeArea(
         child: Center(
@@ -104,17 +120,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Icon(
-                    Icons.person_add,
+                    Icons.engineering,
                     size: 80,
-                    color: Colors.blue,
+                    color: Colors.orange,
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Registro de Cliente',
+                    'Registro de Trabajador',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Solo administradores pueden crear trabajadores',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -129,7 +154,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tus nombres';
+                        return 'Por favor ingresa los nombres';
                       }
                       return null;
                     },
@@ -146,7 +171,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tus apellidos';
+                        return 'Por favor ingresa los apellidos';
                       }
                       return null;
                     },
@@ -186,7 +211,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu número de documento';
+                        return 'Por favor ingresa el número de documento';
                       }
                       return null;
                     },
@@ -204,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu correo';
+                        return 'Por favor ingresa el correo';
                       }
                       if (!value.contains('@')) {
                         return 'Por favor ingresa un correo válido';
@@ -225,26 +250,79 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu teléfono';
+                        return 'Por favor ingresa el teléfono';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
 
-                  // Campo de dirección
+                  // Área del trabajador
+                  Autocomplete<String>(
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return _areasDisponibles;
+                      }
+                      return _areasDisponibles.where((String option) {
+                        return option.toLowerCase().contains(
+                          textEditingValue.text.toLowerCase(),
+                        );
+                      });
+                    },
+                    onSelected: (String selection) {
+                      _areaController.text = selection;
+                    },
+                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                      _areaController.text = controller.text;
+                      return TextFormField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Área (Mecánico, Pintura, etc)',
+                          prefixIcon: Icon(Icons.work),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingresa el área';
+                          }
+                          return null;
+                        },
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Campo de sueldo
                   TextFormField(
-                    controller: _direccionController,
+                    controller: _sueldoController,
+                    keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: 'Dirección',
-                      prefixIcon: Icon(Icons.home),
+                      labelText: 'Sueldo',
+                      prefixIcon: Icon(Icons.attach_money),
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu dirección';
+                        return 'Por favor ingresa el sueldo';
+                      }
+                      if (double.tryParse(value) == null) {
+                        return 'Por favor ingresa un número válido';
                       }
                       return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Estado de disponibilidad
+                  SwitchListTile(
+                    title: const Text('Disponible'),
+                    subtitle: const Text('El trabajador está disponible para trabajar'),
+                    value: _estadoDisponibilidad,
+                    onChanged: (value) {
+                      setState(() {
+                        _estadoDisponibilidad = value;
+                      });
                     },
                   ),
                   const SizedBox(height: 16),
@@ -305,7 +383,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor confirma tu contraseña';
+                        return 'Por favor confirma la contraseña';
                       }
                       if (value != _passwordController.text) {
                         return 'Las contraseñas no coinciden';
@@ -331,22 +409,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Text(
-                            'Registrarse',
+                            'Crear Trabajador',
                             style: TextStyle(fontSize: 16),
                           ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Link para volver al login
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('¿Ya tienes cuenta? '),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Iniciar Sesión'),
-                      ),
-                    ],
                   ),
                 ],
               ),

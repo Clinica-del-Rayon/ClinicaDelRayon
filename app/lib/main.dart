@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'widgets/auth_wrapper.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/register_trabajador_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/register-trabajador': (context) => const RegisterTrabajadorScreen(),
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/home': (context) => const HomeScreen(),
       },
