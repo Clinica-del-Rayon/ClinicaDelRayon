@@ -36,11 +36,58 @@ class _LoginScreenState extends State<LoginScreen> {
       // La navegación se manejará automáticamente por el StreamBuilder
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+        setState(() => _isLoading = false);
+
+        // Mostrar modal de error
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              title: Row(
+                children: [
+                  Icon(Icons.error, color: Colors.red, size: 30),
+                  SizedBox(width: 10),
+                  Expanded(child: Text('Error al Iniciar Sesión')),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Usuario o contraseña incorrectos.',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  SizedBox(height: 12),
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Por favor, verifica tus credenciales e intenta de nuevo.',
+                      style: TextStyle(fontSize: 14, color: Colors.red[900]),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Intentar de nuevo',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       }
     } finally {

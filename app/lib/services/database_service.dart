@@ -1,5 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import '../models/usuario.dart' as models;
+import '../models/vehiculo.dart';
 
 class DatabaseService {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
@@ -8,6 +9,7 @@ class DatabaseService {
   DatabaseReference get _usuariosRef => _database.child('usuarios');
   DatabaseReference get _clientesRef => _database.child('clientes');
   DatabaseReference get _trabajadoresRef => _database.child('trabajadores');
+  DatabaseReference get _vehiculosRef => _database.child('vehiculos');
 
   /// Crear un nuevo cliente en la base de datos
   Future<void> createCliente(models.Cliente cliente) async {
@@ -211,5 +213,105 @@ class DatabaseService {
       }
     });
   }
+
+  // ==========================================
+  // Métodos para gestión de vehículos
+  // ==========================================
+
+  /// Crear un nuevo vehículo
+  Future<String> createVehiculo(Vehiculo vehiculo) async {
+    try {
+      // Generar ID único si no tiene
+      final String vehiculoId = vehiculo.id ?? _vehiculosRef.push().key!;
+
+      final vehiculoConId = vehiculo.copyWith(id: vehiculoId);
+
+      await _vehiculosRef.child(vehiculoId).set(vehiculoConId.toJson());
+
+      return vehiculoId;
+    } catch (e) {
+      throw 'Error al crear vehículo: ${e.toString()}';
+    }
+  }
+
+  /// Obtener vehículo por ID
+  Future<Vehiculo?> getVehiculo(String vehiculoId) async {
+    try {
+      final snapshot = await _vehiculosRef.child(vehiculoId).get();
+
+      if (!snapshot.exists) {
+        return null;
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return Vehiculo.fromJson(data, id: vehiculoId);
+    } catch (e) {
+      throw 'Error al obtener vehículo: ${e.toString()}';
+    }
+  }
+
+  /// Obtener vehículos de un cliente
+  Future<List<Vehiculo>> getVehiculosByCliente(String clienteId) async {
+    try {
+      final snapshot = await _vehiculosRef
+          .orderByChild('cliente_id')
+          .equalTo(clienteId)
+          .get();
+
+      if (!snapshot.exists) {
+        return [];
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data.entries
+          .map((e) => Vehiculo.fromJson(
+                e.value as Map<dynamic, dynamic>,
+                id: e.key,
+              ))
+          .toList();
+    } catch (e) {
+      throw 'Error al obtener vehículos del cliente: ${e.toString()}';
+    }
+  }
+
+  /// Actualizar vehículo
+  Future<void> updateVehiculo(String vehiculoId, Map<String, dynamic> updates) async {
+    try {
+      await _vehiculosRef.child(vehiculoId).update(updates);
+    } catch (e) {
+      throw 'Error al actualizar vehículo: ${e.toString()}';
+    }
+  }
+
+  /// Eliminar vehículo
+  Future<void> deleteVehiculo(String vehiculoId) async {
+    try {
+      await _vehiculosRef.child(vehiculoId).remove();
+    } catch (e) {
+      throw 'Error al eliminar vehículo: ${e.toString()}';
+    }
+  }
+
+  /// Stream de vehículos de un cliente en tiempo real
+  Stream<List<Vehiculo>> vehiculosByClienteStream(String clienteId) {
+    return _vehiculosRef
+        .orderByChild('cliente_id')
+        .equalTo(clienteId)
+        .onValue
+        .map((event) {
+      if (!event.snapshot.exists) {
+        return <Vehiculo>[];
+      }
+
+      final data = event.snapshot.value as Map<dynamic, dynamic>;
+      return data.entries
+          .map((e) => Vehiculo.fromJson(
+                e.value as Map<dynamic, dynamic>,
+                id: e.key,
+              ))
+          .toList();
+    });
+  }
 }
+
 

@@ -110,12 +110,35 @@ class _RegisterTrabajadorScreenState extends State<RegisterTrabajadorScreen> {
                     'Ya puede iniciar sesión con sus credenciales.',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
+                  SizedBox(height: 16),
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Debes volver a iniciar sesión para continuar',
+                            style: TextStyle(fontSize: 13, color: Colors.orange[900], fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
+                    // Forzar logout para que el admin vuelva a login
+                    _authService.signOut();
                   },
                   child: Text(
                     'Entendido',

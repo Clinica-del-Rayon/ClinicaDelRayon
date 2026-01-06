@@ -6,6 +6,16 @@ import 'screens/register_screen.dart';
 import 'screens/register_trabajador_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/create_user_screen.dart';
+import 'screens/clientes_list_screen.dart';
+import 'screens/vehiculos_cliente_screen.dart';
+import 'screens/create_vehiculo_screen.dart';
+import 'screens/select_account_type_screen.dart';
+import 'screens/edit_users_screen.dart';
+import 'screens/edit_user_screen.dart';
+import 'screens/create_cliente_screen.dart';
+import 'screens/create_trabajador_screen.dart';
+import 'screens/create_admin_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +42,36 @@ class MyApp extends StatelessWidget {
         '/register-trabajador': (context) => const RegisterTrabajadorScreen(),
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/home': (context) => const HomeScreen(),
+        '/create-user': (context) => const CreateUserScreen(),
+        '/clientes-list': (context) => const ClientesListScreen(),
+        '/select-account-type': (context) => const SelectAccountTypeScreen(),
+        '/edit-users': (context) => const EditUsersScreen(),
+        '/edit-user': (context) => const EditUserScreen(),
+        '/create-cliente': (context) => const CreateClienteScreen(),
+        '/create-trabajador': (context) => const CreateTrabajadorScreen(),
+        '/create-admin': (context) => const CreateAdminScreen(),
+      },
+      onGenerateRoute: (settings) {
+        // Rutas con parámetros
+        if (settings.name == '/vehiculos-cliente') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => VehiculosClienteScreen(
+              clienteId: args['clienteId'],
+              clienteNombre: args['clienteNombre'],
+            ),
+          );
+        }
+        if (settings.name == '/create-vehiculo') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => CreateVehiculoScreen(
+              clienteId: args['clienteId'],
+              clienteNombre: args['clienteNombre'],
+            ),
+          );
+        }
+        return null;
       },
     );
   }

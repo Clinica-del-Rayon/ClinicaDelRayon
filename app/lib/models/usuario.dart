@@ -186,12 +186,13 @@ class Trabajador extends Usuario {
     required super.correo,
     required super.telefono,
     super.password,
+    super.rol = RolUsuario.TRABAJADOR,  // Permitir especificar el rol
     super.calificacion,
     super.fotoPerfil,
     required this.area,
     this.sueldo = 0.0,
     this.estadoDisponibilidad = true,
-  }) : super(rol: RolUsuario.TRABAJADOR);
+  });
 
   @override
   Map<String, dynamic> toJson() {
@@ -210,9 +211,10 @@ class Trabajador extends Usuario {
       nombres: json['nombres'] as String? ?? '',
       apellidos: json['apellidos'] as String? ?? '',
       tipoDocumento: TipoDocumento.fromJson(json['tipo_documento'] as String? ?? 'CC'),
-      numeroDocumento: json['numero_documento'] as String? ?? '',
+      numeroDocumento: json['numero_documento'].toString(),  // Convertir a String
       correo: json['correo'] as String? ?? '',
-      telefono: json['telefono'] as String? ?? '',
+      telefono: json['telefono'].toString(),  // Convertir a String
+      rol: RolUsuario.fromJson(json['rol'] as String? ?? 'TRABAJADOR'),  // Leer el rol del JSON
       calificacion: (json['calificacion'] as num?)?.toDouble() ?? 0.0,
       fotoPerfil: json['foto_perfil'] as String?,
       area: json['area'] as String? ?? '',

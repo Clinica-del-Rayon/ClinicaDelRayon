@@ -61,11 +61,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Registrar cliente (crea en Auth y Realtime Database)
       await _authService.registerCliente(cliente: cliente);
 
-      if (mounted) {
-        // Volver a la pantalla de login
-        Navigator.pop(context);
+      // Cerrar sesión para que el usuario vuelva a login manualmente
+      await _authService.signOut();
 
-        // Mostrar modal de éxito
+      if (mounted) {
+        // Mostrar modal de éxito PRIMERO
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -78,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Icon(Icons.check_circle, color: Colors.green, size: 30),
                   SizedBox(width: 10),
-                  Text('¡Registro Exitoso!'),
+                  Expanded(child: Text('¡Cuenta Creada!')),
                 ],
               ),
               content: Column(
@@ -87,22 +87,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Text(
                     'Tu cuenta ha sido creada correctamente.',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Ya puedes iniciar sesión con tus credenciales.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  SizedBox(height: 12),
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.green, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Ya puedes iniciar sesión con tus credenciales.',
+                            style: TextStyle(fontSize: 14, color: Colors.green[900]),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
               actions: [
-                TextButton(
+                ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(); // Cerrar modal
+                    Navigator.of(context).pop(); // Volver a login
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
                   child: Text(
-                    'Entendido',
+                    'Ir a Iniciar Sesión',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),

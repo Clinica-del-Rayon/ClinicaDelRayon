@@ -69,11 +69,18 @@ class AuthService {
   Future<UserCredential?> registerTrabajador({
     required models.Trabajador trabajador,
   }) async {
+    User? adminUser;
     try {
       // Verificar que el usuario actual sea ADMIN
       final currentUserRole = await getCurrentUserRole();
       if (currentUserRole != models.RolUsuario.ADMIN) {
         throw 'Solo los administradores pueden crear trabajadores.';
+      }
+
+      // Guardar referencia al usuario admin actual
+      adminUser = _auth.currentUser;
+      if (adminUser == null) {
+        throw 'No hay sesión de administrador activa.';
       }
 
       // Crear usuario en Firebase Auth
@@ -91,6 +98,7 @@ class AuthService {
         numeroDocumento: trabajador.numeroDocumento,
         correo: trabajador.correo,
         telefono: trabajador.telefono,
+        rol: trabajador.rol, // Respetar el rol (puede ser TRABAJADOR o ADMIN)
         area: trabajador.area,
         sueldo: trabajador.sueldo,
         estadoDisponibilidad: trabajador.estadoDisponibilidad,
@@ -106,10 +114,19 @@ class AuthService {
         '${trabajador.nombres} ${trabajador.apellidos}',
       );
 
+      // CRÍTICO: Cerrar sesión del trabajador recién creado
+      await _auth.signOut();
+
+      // CRÍTICO: Restaurar la sesión del admin
+      // Nota: En producción, deberías usar Firebase Admin SDK
+      // Por ahora, el usuario deberá refrescar la sesión
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      // Si hay error, el admin necesitará volver a iniciar sesión
       throw _handleAuthException(e);
     } catch (e) {
+      // Si hay error, el admin necesitará volver a iniciar sesión
       throw 'Error al registrar trabajador: ${e.toString()}';
     }
   }
