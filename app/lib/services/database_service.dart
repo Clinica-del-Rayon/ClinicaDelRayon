@@ -218,9 +218,29 @@ class DatabaseService {
   // Métodos para gestión de vehículos
   // ==========================================
 
+  /// Verificar si existe un vehículo con la placa dada
+  Future<bool> existeVehiculoConPlaca(String placa) async {
+    try {
+      final snapshot = await _vehiculosRef
+          .orderByChild('placa')
+          .equalTo(placa.toUpperCase())
+          .get();
+
+      return snapshot.exists;
+    } catch (e) {
+      throw 'Error al verificar placa: ${e.toString()}';
+    }
+  }
+
   /// Crear un nuevo vehículo
   Future<String> createVehiculo(Vehiculo vehiculo) async {
     try {
+      // Verificar si ya existe un vehículo con esa placa
+      final placaExiste = await existeVehiculoConPlaca(vehiculo.placa);
+      if (placaExiste) {
+        throw 'Ya existe un vehículo registrado con la placa ${vehiculo.placa}';
+      }
+
       // Generar ID único si no tiene
       final String vehiculoId = vehiculo.id ?? _vehiculosRef.push().key!;
 
@@ -230,6 +250,10 @@ class DatabaseService {
 
       return vehiculoId;
     } catch (e) {
+      // Re-lanzar el error original si es el de placa duplicada
+      if (e.toString().contains('Ya existe un vehículo')) {
+        rethrow;
+      }
       throw 'Error al crear vehículo: ${e.toString()}';
     }
   }
@@ -253,22 +277,24 @@ class DatabaseService {
   /// Obtener vehículos de un cliente
   Future<List<Vehiculo>> getVehiculosByCliente(String clienteId) async {
     try {
-      final snapshot = await _vehiculosRef
-          .orderByChild('cliente_id')
-          .equalTo(clienteId)
-          .get();
+      // Obtener todos los vehículos y filtrar localmente
+      // (Firebase Realtime Database no soporta búsquedas en arrays directamente)
+      final snapshot = await _vehiculosRef.get();
 
       if (!snapshot.exists) {
         return [];
       }
 
       final data = snapshot.value as Map<dynamic, dynamic>;
-      return data.entries
+      final vehiculos = data.entries
           .map((e) => Vehiculo.fromJson(
                 e.value as Map<dynamic, dynamic>,
                 id: e.key,
               ))
+          .where((vehiculo) => vehiculo.clienteIds.contains(clienteId))
           .toList();
+
+      return vehiculos;
     } catch (e) {
       throw 'Error al obtener vehículos del cliente: ${e.toString()}';
     }
@@ -289,6 +315,27 @@ class DatabaseService {
       await _vehiculosRef.child(vehiculoId).remove();
     } catch (e) {
       throw 'Error al eliminar vehículo: ${e.toString()}';
+    }
+  }
+
+  /// Obtener todos los vehículos
+  Future<List<Vehiculo>> getAllVehiculos() async {
+    try {
+      final snapshot = await _vehiculosRef.get();
+
+      if (!snapshot.exists) {
+        return [];
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data.entries
+          .map((e) => Vehiculo.fromJson(
+                e.value as Map<dynamic, dynamic>,
+                id: e.key,
+              ))
+          .toList();
+    } catch (e) {
+      throw 'Error al obtener vehículos: ${e.toString()}';
     }
   }
 
@@ -313,5 +360,4 @@ class DatabaseService {
     });
   }
 }
-
 

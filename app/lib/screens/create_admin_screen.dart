@@ -18,15 +18,12 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
   final _numeroDocumentoController = TextEditingController();
   final _correoController = TextEditingController();
   final _telefonoController = TextEditingController();
-  final _areaController = TextEditingController();
-  final _sueldoController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _estadoDisponibilidad = true;
   TipoDocumento _tipoDocumento = TipoDocumento.CC;
 
   @override
@@ -36,8 +33,6 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
     _numeroDocumentoController.dispose();
     _correoController.dispose();
     _telefonoController.dispose();
-    _areaController.dispose();
-    _sueldoController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -58,75 +53,32 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
         correo: _correoController.text.trim(),
         telefono: _telefonoController.text.trim(),
         rol: RolUsuario.ADMIN, // ROL DE ADMIN
-        area: _areaController.text.trim(),
-        sueldo: double.tryParse(_sueldoController.text) ?? 0.0,
-        estadoDisponibilidad: _estadoDisponibilidad,
         password: _passwordController.text,
+        // No incluir area, sueldo ni estadoDisponibilidad para ADMIN
       );
 
       await _authService.registerTrabajador(trabajador: admin);
 
       if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              title: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 30),
-                  SizedBox(width: 10),
-                  Expanded(child: Text('¡Administrador Creado!')),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('El administrador ha sido registrado exitosamente.'),
-                  SizedBox(height: 12),
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange, width: 1),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Debes volver a iniciar sesión',
-                            style: TextStyle(fontSize: 13, color: Colors.orange[900]),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Cerrar modal
-                    Navigator.of(context).pop(); // Volver a selector
-                    Navigator.of(context).pop(); // Volver a admin home
-                    // Forzar logout
-                    _authService.signOut();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                  child: Text('Entendido'),
+        // Mostrar mensaje de éxito sin cerrar sesión
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text('Administrador creado exitosamente'),
                 ),
               ],
-            );
-          },
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
         );
+
+        // Volver a la pantalla anterior
+        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
@@ -267,44 +219,6 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
                 border: OutlineInputBorder(),
               ),
               validator: (value) => value?.isEmpty ?? true ? 'Campo requerido' : null,
-            ),
-            const SizedBox(height: 16),
-
-            // Área
-            TextFormField(
-              controller: _areaController,
-              decoration: const InputDecoration(
-                labelText: 'Área (Administración, Gerencia, etc.)',
-                prefixIcon: Icon(Icons.work),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) => value?.isEmpty ?? true ? 'Campo requerido' : null,
-            ),
-            const SizedBox(height: 16),
-
-            // Sueldo
-            TextFormField(
-              controller: _sueldoController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Sueldo',
-                prefixIcon: Icon(Icons.attach_money),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value?.isEmpty ?? true) return 'Campo requerido';
-                if (double.tryParse(value!) == null) return 'Ingrese un número válido';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Estado de Disponibilidad
-            SwitchListTile(
-              title: const Text('El administrador está disponible'),
-              value: _estadoDisponibilidad,
-              onChanged: (value) => setState(() => _estadoDisponibilidad = value),
-              activeColor: Colors.green,
             ),
             const SizedBox(height: 16),
 

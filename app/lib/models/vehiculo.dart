@@ -30,7 +30,7 @@ class Vehiculo {
   final String modelo;
   final int generacion;
   final String color;
-  final String clienteId; // FK al cliente dueño
+  final List<String> clienteIds; // Lista de IDs de clientes dueños
   final TipoVehiculo tipoVehiculo;
   final List<String> fotosUrls; // URLs de Firebase Storage
 
@@ -41,10 +41,11 @@ class Vehiculo {
     required this.modelo,
     required this.generacion,
     required this.color,
-    required this.clienteId,
+    List<String>? clienteIds,
     required this.tipoVehiculo,
     List<String>? fotosUrls,
-  }) : fotosUrls = fotosUrls ?? [];
+  }) : clienteIds = clienteIds ?? [],
+       fotosUrls = fotosUrls ?? [];
 
   // Convertir a Map para guardar en Realtime Database
   Map<String, dynamic> toJson() {
@@ -55,7 +56,7 @@ class Vehiculo {
       'modelo': modelo,
       'generacion': generacion,
       'color': color,
-      'cliente_id': clienteId,
+      'cliente_ids': clienteIds,
       'tipo_vehiculo': tipoVehiculo.toJson(),
       'fotos_urls': fotosUrls,
     };
@@ -63,6 +64,17 @@ class Vehiculo {
 
   // Crear desde Map de Realtime Database
   factory Vehiculo.fromJson(Map<dynamic, dynamic> json, {String? id}) {
+    // Manejar compatibilidad con el campo antiguo cliente_id
+    List<String> clientes = [];
+    if (json['cliente_ids'] != null) {
+      clientes = (json['cliente_ids'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ?? [];
+    } else if (json['cliente_id'] != null) {
+      // Compatibilidad con versión antigua
+      clientes = [json['cliente_id'] as String];
+    }
+
     return Vehiculo(
       id: id ?? json['id'] as String?,
       placa: json['placa'] as String? ?? '',
@@ -70,7 +82,7 @@ class Vehiculo {
       modelo: json['modelo'] as String? ?? '',
       generacion: json['generacion'] as int? ?? 0,
       color: json['color'] as String? ?? '',
-      clienteId: json['cliente_id'] as String? ?? '',
+      clienteIds: clientes,
       tipoVehiculo: TipoVehiculo.fromJson(
         json['tipo_vehiculo'] as String? ?? 'CARRO',
       ),
@@ -89,7 +101,7 @@ class Vehiculo {
     String? modelo,
     int? generacion,
     String? color,
-    String? clienteId,
+    List<String>? clienteIds,
     TipoVehiculo? tipoVehiculo,
     List<String>? fotosUrls,
   }) {
@@ -100,7 +112,7 @@ class Vehiculo {
       modelo: modelo ?? this.modelo,
       generacion: generacion ?? this.generacion,
       color: color ?? this.color,
-      clienteId: clienteId ?? this.clienteId,
+      clienteIds: clienteIds ?? this.clienteIds,
       tipoVehiculo: tipoVehiculo ?? this.tipoVehiculo,
       fotosUrls: fotosUrls ?? this.fotosUrls,
     );
@@ -108,6 +120,9 @@ class Vehiculo {
 
   // Validar que tenga al menos 3 fotos
   bool get tieneFotosSuficientes => fotosUrls.length >= 3;
+
+  // Validar que tenga al menos un cliente
+  bool get tieneClientes => clienteIds.isNotEmpty;
 
   // Obtener descripción del vehículo
   String get descripcion => '$marca $modelo $generacion';

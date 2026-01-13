@@ -16,6 +16,10 @@ import 'screens/edit_user_screen.dart';
 import 'screens/create_cliente_screen.dart';
 import 'screens/create_trabajador_screen.dart';
 import 'screens/create_admin_screen.dart';
+import 'screens/usuarios_management_screen.dart';
+import 'screens/user_details_screen.dart';
+import 'screens/vehiculos_management_screen.dart';
+import 'screens/vehiculo_details_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +54,10 @@ class MyApp extends StatelessWidget {
         '/create-cliente': (context) => const CreateClienteScreen(),
         '/create-trabajador': (context) => const CreateTrabajadorScreen(),
         '/create-admin': (context) => const CreateAdminScreen(),
+        '/usuarios-management': (context) => const UsuariosManagementScreen(),
+        '/user-details': (context) => const UserDetailsScreen(),
+        '/vehiculos-management': (context) => const VehiculosManagementScreen(),
+        '/vehiculo-details': (context) => const VehiculoDetailsScreen(),
       },
       onGenerateRoute: (settings) {
         // Rutas con parámetros

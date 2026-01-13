@@ -58,14 +58,15 @@ class TrabajadorHomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  usuario.area,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.orange,
-                    fontWeight: FontWeight.bold,
+                if (usuario.area != null)
+                  Text(
+                    usuario.area!,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 32),
                 Card(
                   child: Padding(
@@ -84,9 +85,12 @@ class TrabajadorHomeScreen extends StatelessWidget {
                         _buildInfoRow('Documento:', '${usuario.tipoDocumento.name} ${usuario.numeroDocumento}'),
                         _buildInfoRow('Correo:', usuario.correo),
                         _buildInfoRow('Teléfono:', usuario.telefono),
-                        _buildInfoRow('Área:', usuario.area),
-                        _buildInfoRow('Sueldo:', '\$${usuario.sueldo.toStringAsFixed(2)}'),
-                        _buildInfoRow('Estado:', usuario.estadoDisponibilidad ? 'Disponible ✅' : 'No disponible ❌'),
+                        if (usuario.area != null)
+                          _buildInfoRow('Área:', usuario.area!),
+                        if (usuario.sueldo != null)
+                          _buildInfoRow('Sueldo:', '\$${usuario.sueldo!.toStringAsFixed(2)}'),
+                        if (usuario.estadoDisponibilidad != null)
+                          _buildInfoRow('Estado:', usuario.estadoDisponibilidad! ? 'Disponible ✅' : 'No disponible ❌'),
                         _buildInfoRow('Calificación:', '${usuario.calificacion.toStringAsFixed(1)} ⭐'),
                       ],
                     ),

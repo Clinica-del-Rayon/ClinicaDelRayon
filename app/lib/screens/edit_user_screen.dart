@@ -52,9 +52,10 @@ class _EditUserScreenState extends State<EditUserScreen> {
     }
 
     if (_usuario is Trabajador) {
-      _areaController = TextEditingController(text: (_usuario as Trabajador).area);
-      _sueldoController = TextEditingController(text: (_usuario as Trabajador).sueldo.toString());
-      _estadoDisponibilidad = (_usuario as Trabajador).estadoDisponibilidad;
+      final trabajador = _usuario as Trabajador;
+      _areaController = TextEditingController(text: trabajador.area ?? '');
+      _sueldoController = TextEditingController(text: trabajador.sueldo?.toString() ?? '0');
+      _estadoDisponibilidad = trabajador.estadoDisponibilidad ?? true;
     } else {
       _areaController = TextEditingController();
       _sueldoController = TextEditingController(text: '0');
@@ -98,6 +99,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
           fotoPerfil: _usuario.fotoPerfil,
         );
       } else {
+        // Para TRABAJADOR o ADMIN
         usuarioActualizado = Trabajador(
           uid: _usuario.uid,
           nombres: _nombresController.text.trim(),
@@ -107,9 +109,10 @@ class _EditUserScreenState extends State<EditUserScreen> {
           correo: _correoController.text.trim(),
           telefono: _telefonoController.text.trim(),
           rol: _rolSeleccionado,
-          area: _areaController.text.trim(),
-          sueldo: double.tryParse(_sueldoController.text) ?? 0.0,
-          estadoDisponibilidad: _estadoDisponibilidad,
+          // Solo incluir estos campos si NO es ADMIN
+          area: _rolSeleccionado != RolUsuario.ADMIN ? _areaController.text.trim() : null,
+          sueldo: _rolSeleccionado != RolUsuario.ADMIN ? (double.tryParse(_sueldoController.text) ?? 0.0) : null,
+          estadoDisponibilidad: _rolSeleccionado != RolUsuario.ADMIN ? _estadoDisponibilidad : null,
           calificacion: _usuario.calificacion,
           fotoPerfil: _usuario.fotoPerfil,
         );
@@ -119,40 +122,30 @@ class _EditUserScreenState extends State<EditUserScreen> {
       await _dbService.updateUsuario(_usuario.uid, usuarioActualizado.toJson());
 
       if (mounted) {
-        // Mostrar modal de éxito
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              title: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 30),
-                  SizedBox(width: 10),
-                  Expanded(child: Text('¡Cambios Guardados!')),
-                ],
-              ),
-              content: Text(
-                'Los datos del usuario han sido actualizados correctamente.',
-                style: TextStyle(fontSize: 16),
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Cerrar modal
-                    Navigator.of(context).pop(); // Volver a lista
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                  child: Text('Aceptar'),
+        // Mostrar mensaje de éxito con SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text('Usuario actualizado exitosamente'),
                 ),
               ],
-            );
-          },
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
         );
+
+        // Actualizar el estado local
+        setState(() {
+          _usuario = usuarioActualizado;
+        });
+
+        // Volver con resultado true para indicar que hubo cambios
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -326,7 +319,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
               ),
             ],
 
-            if (_rolSeleccionado == RolUsuario.TRABAJADOR || _rolSeleccionado == RolUsuario.ADMIN) ...[
+            if (_rolSeleccionado == RolUsuario.TRABAJADOR) ...[
               TextFormField(
                 controller: _areaController,
                 decoration: const InputDecoration(

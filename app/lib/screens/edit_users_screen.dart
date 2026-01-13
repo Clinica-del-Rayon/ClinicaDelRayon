@@ -223,13 +223,18 @@ class _EditUsersScreenState extends State<EditUsersScreen> {
           ],
         ),
         trailing: const Icon(Icons.edit, color: Colors.purple),
-        onTap: () {
-          // Navegar a pantalla de edición según el rol
-          Navigator.pushNamed(
+        onTap: () async {
+          // Navegar a pantalla de edición y esperar resultado
+          final result = await Navigator.pushNamed(
             context,
             '/edit-user',
             arguments: usuario,
           );
+
+          // Si hubo cambios, recargar la lista
+          if (result == true) {
+            _loadAllUsers();
+          }
         },
       ),
     );

@@ -54,98 +54,41 @@ class AdminHomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
 
-                // Botón Crear Usuario (con selector de tipo)
+                // Botón Usuarios
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/select-account-type');
+                    Navigator.pushNamed(context, '/usuarios-management');
                   },
-                  icon: const Icon(Icons.person_add),
-                  label: const Text('Crear Usuario'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                    minimumSize: const Size(280, 50),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Botón Editar Usuarios
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/edit-users');
-                  },
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Editar Usuarios'),
+                  icon: const Icon(Icons.people, size: 32),
+                  label: const Text('Usuarios', style: TextStyle(fontSize: 20)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purple,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
+                      horizontal: 48,
+                      vertical: 24,
                     ),
-                    minimumSize: const Size(280, 50),
+                    minimumSize: const Size(280, 70),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
-                // Botón Registrar Vehículos
+                // Botón Vehículos
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/clientes-list');
+                    Navigator.pushNamed(context, '/vehiculos-management');
                   },
-                  icon: const Icon(Icons.directions_car),
-                  label: const Text('Registrar Vehículos'),
+                  icon: const Icon(Icons.directions_car, size: 32),
+                  label: const Text('Vehículos', style: TextStyle(fontSize: 20)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
+                      horizontal: 48,
+                      vertical: 24,
                     ),
-                    minimumSize: const Size(280, 50),
+                    minimumSize: const Size(280, 70),
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Botones secundarios
-                OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Ver lista de trabajadores
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Función próximamente disponible')),
-                    );
-                  },
-                  icon: const Icon(Icons.people),
-                  label: const Text('Ver Trabajadores'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                    minimumSize: const Size(280, 50),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Ver lista de clientes
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Función próximamente disponible')),
-                    );
-                  },
-                  icon: const Icon(Icons.people_outline),
-                  label: const Text('Ver Clientes'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                    minimumSize: const Size(280, 50),
-                  ),
-                ),
               ],
             ),
           ),

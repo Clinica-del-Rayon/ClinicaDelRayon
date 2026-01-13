@@ -173,9 +173,9 @@ class Cliente extends Usuario {
 
 /// Clase Trabajador (hereda de Usuario)
 class Trabajador extends Usuario {
-  final String area; // Mecánico, Pintura, Etc
-  final double sueldo;
-  final bool estadoDisponibilidad;
+  final String? area; // Mecánico, Pintura, Etc (null para ADMIN)
+  final double? sueldo; // null para ADMIN
+  final bool? estadoDisponibilidad; // null para ADMIN
 
   Trabajador({
     required super.uid,
@@ -189,23 +189,27 @@ class Trabajador extends Usuario {
     super.rol = RolUsuario.TRABAJADOR,  // Permitir especificar el rol
     super.calificacion,
     super.fotoPerfil,
-    required this.area,
-    this.sueldo = 0.0,
-    this.estadoDisponibilidad = true,
+    this.area,
+    this.sueldo,
+    this.estadoDisponibilidad,
   });
 
   @override
   Map<String, dynamic> toJson() {
     final map = super.toJson();
-    map.addAll({
-      'area': area,
-      'sueldo': sueldo,
-      'estado_disponibilidad': estadoDisponibilidad,
-    });
+    // Solo agregar campos si el rol NO es ADMIN
+    if (rol != RolUsuario.ADMIN) {
+      map.addAll({
+        'area': area ?? '',
+        'sueldo': sueldo ?? 0.0,
+        'estado_disponibilidad': estadoDisponibilidad ?? true,
+      });
+    }
     return map;
   }
 
   factory Trabajador.fromJson(Map<dynamic, dynamic> json) {
+    final rol = RolUsuario.fromJson(json['rol'] as String? ?? 'TRABAJADOR');
     return Trabajador(
       uid: json['uid'] as String? ?? '',
       nombres: json['nombres'] as String? ?? '',
@@ -214,12 +218,13 @@ class Trabajador extends Usuario {
       numeroDocumento: json['numero_documento'].toString(),  // Convertir a String
       correo: json['correo'] as String? ?? '',
       telefono: json['telefono'].toString(),  // Convertir a String
-      rol: RolUsuario.fromJson(json['rol'] as String? ?? 'TRABAJADOR'),  // Leer el rol del JSON
+      rol: rol,
       calificacion: (json['calificacion'] as num?)?.toDouble() ?? 0.0,
       fotoPerfil: json['foto_perfil'] as String?,
-      area: json['area'] as String? ?? '',
-      sueldo: (json['sueldo'] as num?)?.toDouble() ?? 0.0,
-      estadoDisponibilidad: json['estado_disponibilidad'] as bool? ?? true,
+      // Solo cargar estos campos si NO es ADMIN
+      area: rol != RolUsuario.ADMIN ? (json['area'] as String?) : null,
+      sueldo: rol != RolUsuario.ADMIN ? (json['sueldo'] as num?)?.toDouble() : null,
+      estadoDisponibilidad: rol != RolUsuario.ADMIN ? (json['estado_disponibilidad'] as bool? ?? true) : null,
     );
   }
 }

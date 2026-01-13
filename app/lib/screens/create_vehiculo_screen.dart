@@ -86,6 +86,7 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
 
     setState(() => _isLoading = true);
 
+    String? vehiculoId;
     try {
       // Crear vehículo temporalmente para obtener ID
       final vehiculoTemp = Vehiculo(
@@ -94,12 +95,12 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
         modelo: _modeloController.text.trim(),
         generacion: int.parse(_generacionController.text.trim()),
         color: _colorController.text.trim(),
-        clienteId: widget.clienteId,
+        clienteIds: [widget.clienteId], // Usar lista con el cliente actual
         tipoVehiculo: _tipoVehiculo,
       );
 
-      // Crear vehículo en DB y obtener ID
-      final vehiculoId = await _dbService.createVehiculo(vehiculoTemp);
+      // Crear vehículo en DB y obtener ID (esto ya valida placa duplicada)
+      vehiculoId = await _dbService.createVehiculo(vehiculoTemp);
 
       // Subir fotos a Firebase Storage
       final List<String> fotosUrls = [];
@@ -123,32 +124,34 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
         Navigator.pop(context); // Cerrar loading
         Navigator.pop(context); // Volver a lista de vehículos
 
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            title: Row(
+        // Mostrar mensaje de éxito con SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 30),
-                SizedBox(width: 10),
-                Text('¡Vehículo Registrado!'),
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text('Vehículo registrado exitosamente con ${fotosUrls.length} fotos'),
+                ),
               ],
             ),
-            content: Text(
-              'El vehículo ha sido registrado exitosamente con ${fotosUrls.length} fotos.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Entendido'),
-              ),
-            ],
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
           ),
         );
       }
     } catch (e) {
+      // Si se creó el vehículo pero falló la subida de fotos, eliminar el vehículo
+      if (vehiculoId != null) {
+        try {
+          await _dbService.deleteVehiculo(vehiculoId);
+          print('Vehículo eliminado tras error en subida de fotos');
+        } catch (deleteError) {
+          print('Error al eliminar vehículo tras fallo: $deleteError');
+        }
+      }
+
       if (mounted) {
         Navigator.pop(context); // Cerrar loading
         _mostrarError(e.toString());
@@ -192,7 +195,7 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Registrar Vehículo'),
+        title: Text('Crear Vehículo'),
         backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
@@ -467,7 +470,7 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
                       )
                     : Icon(Icons.check),
                 label: Text(
-                  _isLoading ? 'Creando...' : 'Registrar Vehículo',
+                  _isLoading ? 'Creando...' : 'Crear Vehículo',
                   style: TextStyle(fontSize: 16),
                 ),
                 style: ElevatedButton.styleFrom(
