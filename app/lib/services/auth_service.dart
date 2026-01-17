@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'database_service.dart';
 import '../models/usuario.dart' as models;
 
@@ -25,19 +26,26 @@ class AuthService {
   }
 
   // Registro de Cliente con email y contraseña
-  Future<UserCredential?> registerCliente({
+  Future<String> registerCliente({
     required models.Cliente cliente,
   }) async {
+    User? adminUser = _auth.currentUser;
+
     try {
+      // Si hay un admin autenticado, guardar referencia
+      bool isAdminCreating = adminUser != null;
+
       // Crear usuario en Firebase Auth
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: cliente.correo,
         password: cliente.password!,
       );
 
+      String newUserId = userCredential.user!.uid;
+
       // Actualizar el UID del cliente con el UID de Firebase Auth
       final clienteConUid = models.Cliente(
-        uid: userCredential.user!.uid,
+        uid: newUserId,
         nombres: cliente.nombres,
         apellidos: cliente.apellidos,
         tipoDocumento: cliente.tipoDocumento,
@@ -57,7 +65,14 @@ class AuthService {
         '${cliente.nombres} ${cliente.apellidos}',
       );
 
-      return userCredential;
+      // Si un admin estaba creando, cerrar sesión del nuevo usuario
+      if (isAdminCreating) {
+        await _auth.signOut();
+        // NOTA: El admin necesitará volver a iniciar sesión manualmente
+        // En producción esto se resuelve con Firebase Admin SDK en el backend
+      }
+
+      return newUserId;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
@@ -66,7 +81,7 @@ class AuthService {
   }
 
   // Registro de Trabajador con email y contraseña (solo para ADMIN)
-  Future<UserCredential?> registerTrabajador({
+  Future<String> registerTrabajador({
     required models.Trabajador trabajador,
   }) async {
     User? adminUser;
@@ -89,9 +104,11 @@ class AuthService {
         password: trabajador.password!,
       );
 
+      String newUserId = userCredential.user!.uid;
+
       // Actualizar el UID del trabajador con el UID de Firebase Auth
       final trabajadorConUid = models.Trabajador(
-        uid: userCredential.user!.uid,
+        uid: newUserId,
         nombres: trabajador.nombres,
         apellidos: trabajador.apellidos,
         tipoDocumento: trabajador.tipoDocumento,
@@ -117,11 +134,10 @@ class AuthService {
       // CRÍTICO: Cerrar sesión del trabajador recién creado
       await _auth.signOut();
 
-      // CRÍTICO: Restaurar la sesión del admin
-      // Nota: En producción, deberías usar Firebase Admin SDK
-      // Por ahora, el usuario deberá refrescar la sesión
+      // CRÍTICO: El admin necesitará volver a iniciar sesión
+      // En producción, esto se resuelve con Firebase Admin SDK en el backend
 
-      return userCredential;
+      return newUserId;
     } on FirebaseAuthException catch (e) {
       // Si hay error, el admin necesitará volver a iniciar sesión
       throw _handleAuthException(e);
@@ -168,6 +184,49 @@ class AuthService {
       await currentUser?.updatePhotoURL(photoURL);
     } catch (e) {
       throw 'Error al actualizar el perfil: ${e.toString()}';
+    }
+  }
+
+  // Actualizar datos del usuario en la base de datos
+  Future<void> updateUserProfile(Map<String, dynamic> updates) async {
+    try {
+      final uid = currentUser?.uid;
+      if (uid == null) throw 'Usuario no autenticado';
+
+      await FirebaseDatabase.instance.ref('usuarios/$uid').update(updates);
+
+      // También actualizar en el nodo específico según el rol
+      final rolSnapshot = await FirebaseDatabase.instance.ref('usuarios/$uid/rol').get();
+      if (rolSnapshot.exists) {
+        final rol = rolSnapshot.value as String;
+        if (rol == 'CLIENTE') {
+          await FirebaseDatabase.instance.ref('clientes/$uid').update(updates);
+        } else if (rol == 'TRABAJADOR' || rol == 'ADMIN') {
+          await FirebaseDatabase.instance.ref('trabajadores/$uid').update(updates);
+        }
+      }
+    } catch (e) {
+      throw 'Error al actualizar datos del usuario: ${e.toString()}';
+    }
+  }
+
+  // Actualizar datos de otro usuario en la base de datos (para admins)
+  Future<void> updateOtherUserProfile(String userId, Map<String, dynamic> updates) async {
+    try {
+      await FirebaseDatabase.instance.ref('usuarios/$userId').update(updates);
+
+      // También actualizar en el nodo específico según el rol
+      final rolSnapshot = await FirebaseDatabase.instance.ref('usuarios/$userId/rol').get();
+      if (rolSnapshot.exists) {
+        final rol = rolSnapshot.value as String;
+        if (rol == 'CLIENTE') {
+          await FirebaseDatabase.instance.ref('clientes/$userId').update(updates);
+        } else if (rol == 'TRABAJADOR' || rol == 'ADMIN') {
+          await FirebaseDatabase.instance.ref('trabajadores/$userId').update(updates);
+        }
+      }
+    } catch (e) {
+      throw 'Error al actualizar datos del usuario: ${e.toString()}';
     }
   }
 

@@ -198,7 +198,7 @@ class _VehiculosManagementScreenState extends State<VehiculosManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/clientes-list').then((_) => _loadData());
+          Navigator.pushNamed(context, '/select-clientes-vehiculo').then((_) => _loadData());
         },
         backgroundColor: Colors.blue,
         child: Icon(Icons.add),
@@ -297,11 +297,15 @@ class _VehiculosManagementScreenState extends State<VehiculosManagementScreen> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () {
-                      // TODO: Navegar a editar vehículo
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Función de editar próximamente')),
+                    onPressed: () async {
+                      final result = await Navigator.pushNamed(
+                        context,
+                        '/edit-vehiculo',
+                        arguments: vehiculo,
                       );
+                      if (result == true) {
+                        _loadData();
+                      }
                     },
                   ),
                   IconButton(

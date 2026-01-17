@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import '../models/usuario.dart' as models;
 import '../models/vehiculo.dart';
+import '../models/orden.dart';
 
 class DatabaseService {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
@@ -10,6 +11,8 @@ class DatabaseService {
   DatabaseReference get _clientesRef => _database.child('clientes');
   DatabaseReference get _trabajadoresRef => _database.child('trabajadores');
   DatabaseReference get _vehiculosRef => _database.child('vehiculos');
+  DatabaseReference get _serviciosRef => _database.child('servicios');
+  DatabaseReference get _ordenesRef => _database.child('ordenes');
 
   /// Crear un nuevo cliente en la base de datos
   Future<void> createCliente(models.Cliente cliente) async {
@@ -300,6 +303,11 @@ class DatabaseService {
     }
   }
 
+  /// Alias para compatibilidad
+  Future<List<Vehiculo>> getVehiculosByClienteId(String clienteId) {
+    return getVehiculosByCliente(clienteId);
+  }
+
   /// Actualizar vehículo
   Future<void> updateVehiculo(String vehiculoId, Map<String, dynamic> updates) async {
     try {
@@ -358,6 +366,224 @@ class DatabaseService {
               ))
           .toList();
     });
+  }
+
+  // ============================================
+  // MÉTODOS PARA SERVICIOS
+  // ============================================
+
+  /// Crear un nuevo servicio
+  Future<void> createServicio(Servicio servicio) async {
+    try {
+      await _serviciosRef.child(servicio.id).set(servicio.toJson());
+    } catch (e) {
+      throw 'Error al crear servicio: ${e.toString()}';
+    }
+  }
+
+  /// Obtener servicio por ID
+  Future<Servicio?> getServicio(String id) async {
+    try {
+      final snapshot = await _serviciosRef.child(id).get();
+
+      if (!snapshot.exists) {
+        return null;
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return Servicio.fromJson(data);
+    } catch (e) {
+      throw 'Error al obtener servicio: ${e.toString()}';
+    }
+  }
+
+  /// Obtener todos los servicios
+  Future<List<Servicio>> getAllServicios() async {
+    try {
+      final snapshot = await _serviciosRef.get();
+
+      if (!snapshot.exists) {
+        return [];
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data.entries
+          .map((e) => Servicio.fromJson(e.value as Map<dynamic, dynamic>))
+          .toList();
+    } catch (e) {
+      throw 'Error al obtener servicios: ${e.toString()}';
+    }
+  }
+
+  /// Stream de todos los servicios
+  Stream<List<Servicio>> getServiciosStream() {
+    return _serviciosRef.onValue.map((event) {
+      if (!event.snapshot.exists) {
+        return <Servicio>[];
+      }
+
+      final data = event.snapshot.value as Map<dynamic, dynamic>;
+      return data.entries
+          .map((e) => Servicio.fromJson(e.value as Map<dynamic, dynamic>))
+          .toList();
+    });
+  }
+
+  /// Actualizar servicio
+  Future<void> updateServicio(String id, Map<String, dynamic> updates) async {
+    try {
+      await _serviciosRef.child(id).update(updates);
+    } catch (e) {
+      throw 'Error al actualizar servicio: ${e.toString()}';
+    }
+  }
+
+  /// Eliminar servicio
+  Future<void> deleteServicio(String id) async {
+    try {
+      await _serviciosRef.child(id).remove();
+    } catch (e) {
+      throw 'Error al eliminar servicio: ${e.toString()}';
+    }
+  }
+
+  // ============================================
+  // MÉTODOS PARA ÓRDENES
+  // ============================================
+
+  /// Crear una nueva orden
+  Future<void> createOrden(Orden orden) async {
+    try {
+      await _ordenesRef.child(orden.id).set(orden.toJson());
+    } catch (e) {
+      throw 'Error al crear orden: ${e.toString()}';
+    }
+  }
+
+  /// Obtener orden por ID
+  Future<Orden?> getOrden(String id) async {
+    try {
+      final snapshot = await _ordenesRef.child(id).get();
+
+      if (!snapshot.exists) {
+        return null;
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return Orden.fromJson(data);
+    } catch (e) {
+      throw 'Error al obtener orden: ${e.toString()}';
+    }
+  }
+
+  /// Obtener todas las órdenes
+  Future<List<Orden>> getAllOrdenes() async {
+    try {
+      final snapshot = await _ordenesRef.get();
+
+      if (!snapshot.exists) {
+        return [];
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data.entries
+          .map((e) => Orden.fromJson(e.value as Map<dynamic, dynamic>))
+          .toList();
+    } catch (e) {
+      throw 'Error al obtener órdenes: ${e.toString()}';
+    }
+  }
+
+  /// Stream de todas las órdenes
+  Stream<List<Orden>> getOrdenesStream() {
+    return _ordenesRef.onValue.map((event) {
+      if (!event.snapshot.exists) {
+        return <Orden>[];
+      }
+
+      final data = event.snapshot.value as Map<dynamic, dynamic>;
+      return data.entries
+          .map((e) => Orden.fromJson(e.value as Map<dynamic, dynamic>))
+          .toList();
+    });
+  }
+
+  /// Obtener órdenes de un cliente específico
+  Future<List<Orden>> getOrdenesByCliente(String clienteId) async {
+    try {
+      final snapshot = await _ordenesRef
+          .orderByChild('cliente_id')
+          .equalTo(clienteId)
+          .get();
+
+      if (!snapshot.exists) {
+        return [];
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data.entries
+          .map((e) => Orden.fromJson(e.value as Map<dynamic, dynamic>))
+          .toList();
+    } catch (e) {
+      throw 'Error al obtener órdenes del cliente: ${e.toString()}';
+    }
+  }
+
+  /// Obtener órdenes de un vehículo específico
+  Future<List<Orden>> getOrdenesByVehiculo(String vehiculoId) async {
+    try {
+      final snapshot = await _ordenesRef
+          .orderByChild('vehiculo_id')
+          .equalTo(vehiculoId)
+          .get();
+
+      if (!snapshot.exists) {
+        return [];
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data.entries
+          .map((e) => Orden.fromJson(e.value as Map<dynamic, dynamic>))
+          .toList();
+    } catch (e) {
+      throw 'Error al obtener órdenes del vehículo: ${e.toString()}';
+    }
+  }
+
+  /// Actualizar orden
+  Future<void> updateOrden(String id, Map<String, dynamic> updates) async {
+    try {
+      await _ordenesRef.child(id).update(updates);
+    } catch (e) {
+      throw 'Error al actualizar orden: ${e.toString()}';
+    }
+  }
+
+  /// Actualizar estado de la orden
+  Future<void> updateEstadoOrden(String id, EstadoOrden estado) async {
+    try {
+      await _ordenesRef.child(id).update({'estado': estado.toJson()});
+    } catch (e) {
+      throw 'Error al actualizar estado de la orden: ${e.toString()}';
+    }
+  }
+
+  /// Actualizar un detalle específico de la orden
+  Future<void> updateDetalleOrden(String ordenId, int detalleIndex, Map<String, dynamic> updates) async {
+    try {
+      await _ordenesRef.child(ordenId).child('detalles').child(detalleIndex.toString()).update(updates);
+    } catch (e) {
+      throw 'Error al actualizar detalle de la orden: ${e.toString()}';
+    }
+  }
+
+  /// Eliminar orden
+  Future<void> deleteOrden(String id) async {
+    try {
+      await _ordenesRef.child(id).remove();
+    } catch (e) {
+      throw 'Error al eliminar orden: ${e.toString()}';
+    }
   }
 }
 

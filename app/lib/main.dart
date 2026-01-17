@@ -20,6 +20,13 @@ import 'screens/usuarios_management_screen.dart';
 import 'screens/user_details_screen.dart';
 import 'screens/vehiculos_management_screen.dart';
 import 'screens/vehiculo_details_screen.dart';
+import 'screens/servicios_management_screen.dart';
+import 'screens/create_servicio_screen.dart';
+import 'screens/ordenes_management_screen.dart';
+import 'screens/create_orden_screen.dart';
+import 'screens/edit_vehiculo_screen.dart';
+import 'screens/select_clientes_vehiculo_screen.dart';
+import 'screens/create_vehiculo_multi_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +65,13 @@ class MyApp extends StatelessWidget {
         '/user-details': (context) => const UserDetailsScreen(),
         '/vehiculos-management': (context) => const VehiculosManagementScreen(),
         '/vehiculo-details': (context) => const VehiculoDetailsScreen(),
+        '/edit-vehiculo': (context) => const EditVehiculoScreen(),
+        '/select-clientes-vehiculo': (context) => const SelectClientesVehiculoScreen(),
+        '/create-vehiculo-multi': (context) => const CreateVehiculoMultiScreen(),
+        '/servicios-management': (context) => const ServiciosManagementScreen(),
+        '/create-servicio': (context) => const CreateServicioScreen(),
+        '/ordenes-management': (context) => const OrdenesManagementScreen(),
+        '/create-orden': (context) => const CreateOrdenScreen(),
       },
       onGenerateRoute: (settings) {
         // Rutas con parámetros

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/database_service.dart';
+import '../services/storage_service.dart';
 import '../models/usuario.dart';
+import '../widgets/foto_perfil_selector.dart';
 
 class EditUserScreen extends StatefulWidget {
   const EditUserScreen({super.key});
@@ -11,6 +14,7 @@ class EditUserScreen extends StatefulWidget {
 
 class _EditUserScreenState extends State<EditUserScreen> {
   final DatabaseService _dbService = DatabaseService();
+  final StorageService _storageService = StorageService();
   final _formKey = GlobalKey<FormState>();
 
   late Usuario _usuario;
@@ -28,6 +32,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
   late bool _estadoDisponibilidad;
   bool _isLoading = false;
 
+  String? _fotoPerfilUrl; // URL actual de la foto
+  XFile? _nuevaFotoPerfil; // Nueva foto seleccionada
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -43,6 +50,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _telefonoController = TextEditingController(text: _usuario.telefono);
     _tipoDocumento = _usuario.tipoDocumento;
     _rolSeleccionado = _usuario.rol;
+    _fotoPerfilUrl = _usuario.fotoPerfil; // Inicializar foto actual
 
     // Inicializar campos específicos según el rol
     if (_usuario is Cliente) {
@@ -82,6 +90,15 @@ class _EditUserScreenState extends State<EditUserScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Subir nueva foto si existe
+      String? fotoUrl = _fotoPerfilUrl;
+      if (_nuevaFotoPerfil != null) {
+        fotoUrl = await _storageService.uploadUserProfilePicture(
+          _usuario.uid,
+          _nuevaFotoPerfil!,
+        );
+      }
+
       // Crear el usuario actualizado según el rol seleccionado
       Usuario usuarioActualizado;
 
@@ -96,7 +113,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
           telefono: _telefonoController.text.trim(),
           direccion: _direccionController.text.trim(),
           calificacion: _usuario.calificacion,
-          fotoPerfil: _usuario.fotoPerfil,
+          fotoPerfil: fotoUrl,
         );
       } else {
         // Para TRABAJADOR o ADMIN
@@ -114,7 +131,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
           sueldo: _rolSeleccionado != RolUsuario.ADMIN ? (double.tryParse(_sueldoController.text) ?? 0.0) : null,
           estadoDisponibilidad: _rolSeleccionado != RolUsuario.ADMIN ? _estadoDisponibilidad : null,
           calificacion: _usuario.calificacion,
-          fotoPerfil: _usuario.fotoPerfil,
+          fotoPerfil: fotoUrl,
         );
       }
 
@@ -206,6 +223,23 @@ class _EditUserScreenState extends State<EditUserScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // Foto de perfil
+            FotoPerfilSelector(
+              fotoPerfilUrl: _fotoPerfilUrl,
+              onFotoSeleccionada: (foto) {
+                setState(() {
+                  _nuevaFotoPerfil = foto;
+                });
+              },
+              onFotoEliminada: () {
+                setState(() {
+                  _fotoPerfilUrl = null;
+                  _nuevaFotoPerfil = null;
+                });
+              },
+            ),
+            const SizedBox(height: 24),
+
             // Selector de Rol
             DropdownButtonFormField<RolUsuario>(
               value: _rolSeleccionado,

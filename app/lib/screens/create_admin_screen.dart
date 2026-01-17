@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
+import '../services/storage_service.dart';
 import '../models/usuario.dart';
+import '../widgets/foto_perfil_selector.dart';
 
 class CreateAdminScreen extends StatefulWidget {
   const CreateAdminScreen({super.key});
@@ -11,6 +14,7 @@ class CreateAdminScreen extends StatefulWidget {
 
 class _CreateAdminScreenState extends State<CreateAdminScreen> {
   final AuthService _authService = AuthService();
+  final StorageService _storageService = StorageService();
   final _formKey = GlobalKey<FormState>();
 
   final _nombresController = TextEditingController();
@@ -25,6 +29,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   TipoDocumento _tipoDocumento = TipoDocumento.CC;
+  XFile? _fotoPerfil;
 
   @override
   void dispose() {
@@ -57,10 +62,25 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
         // No incluir area, sueldo ni estadoDisponibilidad para ADMIN
       );
 
-      await _authService.registerTrabajador(trabajador: admin);
+      // Crear admin y obtener su UID
+      final newUserId = await _authService.registerTrabajador(trabajador: admin);
+
+      // Subir foto de perfil si existe
+      if (_fotoPerfil != null) {
+        try {
+          final fotoUrl = await _storageService.uploadUserProfilePicture(newUserId, _fotoPerfil!);
+          await _authService.updateOtherUserProfile(newUserId, {'foto_perfil': fotoUrl});
+        } catch (e) {
+          print('Error al subir foto de perfil: $e');
+          // Continuar aunque falle la foto
+        }
+      }
 
       if (mounted) {
-        // Mostrar mensaje de éxito sin cerrar sesión
+        // Cerrar pantalla de creación
+        Navigator.of(context).pop();
+
+        // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -76,9 +96,6 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
             duration: Duration(seconds: 3),
           ),
         );
-
-        // Volver a la pantalla anterior
-        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
@@ -123,8 +140,16 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Icon(Icons.admin_panel_settings, size: 80, color: Colors.red),
-            const SizedBox(height: 16),
+            // Foto de perfil
+            FotoPerfilSelector(
+              onFotoSeleccionada: (foto) {
+                setState(() {
+                  _fotoPerfil = foto;
+                });
+              },
+            ),
+            const SizedBox(height: 24),
+
             const Text(
               'Crear Nuevo Administrador',
               textAlign: TextAlign.center,
@@ -132,7 +157,7 @@ class _CreateAdminScreenState extends State<CreateAdminScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Control total del sistema',
+              'Solo administradores pueden crear otros administradores',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),

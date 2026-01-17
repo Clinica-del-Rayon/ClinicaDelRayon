@@ -23,9 +23,10 @@ class VehiculoDetailsScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.edit),
             onPressed: () {
-              // TODO: Navegar a editar vehículo
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Función de editar próximamente')),
+              Navigator.pushNamed(
+                context,
+                '/edit-vehiculo',
+                arguments: vehiculo,
               );
             },
           ),

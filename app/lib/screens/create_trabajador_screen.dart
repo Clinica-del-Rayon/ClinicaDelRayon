@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
+import '../services/storage_service.dart';
 import '../models/usuario.dart';
+import '../widgets/foto_perfil_selector.dart';
 
 class CreateTrabajadorScreen extends StatefulWidget {
   const CreateTrabajadorScreen({super.key});
@@ -11,6 +14,7 @@ class CreateTrabajadorScreen extends StatefulWidget {
 
 class _CreateTrabajadorScreenState extends State<CreateTrabajadorScreen> {
   final AuthService _authService = AuthService();
+  final StorageService _storageService = StorageService();
   final _formKey = GlobalKey<FormState>();
 
   final _nombresController = TextEditingController();
@@ -28,6 +32,7 @@ class _CreateTrabajadorScreenState extends State<CreateTrabajadorScreen> {
   bool _obscureConfirmPassword = true;
   bool _estadoDisponibilidad = true;
   TipoDocumento _tipoDocumento = TipoDocumento.CC;
+  XFile? _fotoPerfil;
 
   @override
   void dispose() {
@@ -64,68 +69,38 @@ class _CreateTrabajadorScreenState extends State<CreateTrabajadorScreen> {
         password: _passwordController.text,
       );
 
-      await _authService.registerTrabajador(trabajador: trabajador);
+      // Crear trabajador y obtener su UID
+      final newUserId = await _authService.registerTrabajador(trabajador: trabajador);
+
+      // Subir foto de perfil si existe
+      if (_fotoPerfil != null) {
+        try {
+          final fotoUrl = await _storageService.uploadUserProfilePicture(newUserId, _fotoPerfil!);
+          await _authService.updateOtherUserProfile(newUserId, {'foto_perfil': fotoUrl});
+        } catch (e) {
+          print('Error al subir foto de perfil: $e');
+          // Continuar aunque falle la foto
+        }
+      }
 
       if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              title: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 30),
-                  SizedBox(width: 10),
-                  Expanded(child: Text('¡Trabajador Creado!')),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('El trabajador ha sido registrado exitosamente.'),
-                  SizedBox(height: 12),
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange, width: 1),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Debes volver a iniciar sesión',
-                            style: TextStyle(fontSize: 13, color: Colors.orange[900]),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Cerrar modal
-                    Navigator.of(context).pop(); // Volver a selector
-                    Navigator.of(context).pop(); // Volver a admin home
-                    // Forzar logout
-                    _authService.signOut();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                  child: Text('Entendido'),
+        // Cerrar pantalla de creación y mostrar mensaje de éxito
+        Navigator.of(context).pop(); // Volver a la pantalla anterior
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text('Trabajador creado exitosamente'),
                 ),
               ],
-            );
-          },
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
         );
       }
     } catch (e) {
@@ -171,8 +146,16 @@ class _CreateTrabajadorScreenState extends State<CreateTrabajadorScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Icon(Icons.engineering, size: 80, color: Colors.orange),
-            const SizedBox(height: 16),
+            // Foto de perfil
+            FotoPerfilSelector(
+              onFotoSeleccionada: (foto) {
+                setState(() {
+                  _fotoPerfil = foto;
+                });
+              },
+            ),
+            const SizedBox(height: 24),
+
             const Text(
               'Crear Nuevo Trabajador',
               textAlign: TextAlign.center,

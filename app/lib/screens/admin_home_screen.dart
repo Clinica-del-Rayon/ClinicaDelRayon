@@ -88,6 +88,42 @@ class AdminHomeScreen extends StatelessWidget {
                     minimumSize: const Size(280, 70),
                   ),
                 ),
+                const SizedBox(height: 20),
+
+                // Botón Servicios
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/servicios-management');
+                  },
+                  icon: const Icon(Icons.miscellaneous_services, size: 32),
+                  label: const Text('Servicios', style: TextStyle(fontSize: 20)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 48,
+                      vertical: 24,
+                    ),
+                    minimumSize: const Size(280, 70),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Botón Órdenes
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/ordenes-management');
+                  },
+                  icon: const Icon(Icons.receipt_long, size: 32),
+                  label: const Text('Órdenes', style: TextStyle(fontSize: 20)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 48,
+                      vertical: 24,
+                    ),
+                    minimumSize: const Size(280, 70),
+                  ),
+                ),
                 const SizedBox(height: 24),
               ],
             ),
