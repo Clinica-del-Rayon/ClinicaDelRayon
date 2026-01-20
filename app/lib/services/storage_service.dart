@@ -128,6 +128,69 @@ class StorageService {
     }
   }
 
+  /// Subir foto de servicio (inicial al crear orden)
+  Future<String> uploadServicePhoto(
+    String ordenId,
+    String servicioId,
+    XFile imageFile,
+    int index,
+  ) async {
+    try {
+      final String fileName = 'servicio_${servicioId}_inicial_$index.jpg';
+      final Reference ref = _storage.ref().child('ordenes/$ordenId/servicios/$servicioId/$fileName');
+
+      final File file = File(imageFile.path);
+      final UploadTask uploadTask = ref.putFile(
+        file,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final TaskSnapshot snapshot = await uploadTask;
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      throw 'Error al subir la foto del servicio: ${e.toString()}';
+    }
+  }
+
+  /// Subir foto de avance de servicio
+  Future<String> uploadAvancePhoto(
+    String ordenId,
+    String servicioId,
+    String avanceId,
+    XFile imageFile,
+    int index,
+  ) async {
+    try {
+      final String fileName = 'avance_${avanceId}_$index.jpg';
+      final Reference ref = _storage.ref().child('ordenes/$ordenId/servicios/$servicioId/avances/$fileName');
+
+      final File file = File(imageFile.path);
+      final UploadTask uploadTask = ref.putFile(
+        file,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final TaskSnapshot snapshot = await uploadTask;
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      throw 'Error al subir la foto del avance: ${e.toString()}';
+    }
+  }
+
+  /// Eliminar foto de servicio
+  Future<void> deleteServicePhoto(String imageUrl) async {
+    try {
+      final Reference ref = _storage.refFromURL(imageUrl);
+      await ref.delete();
+    } catch (e) {
+      throw 'Error al eliminar la foto: ${e.toString()}';
+    }
+  }
+
   /// Obtener tamaño de la imagen
   Future<int> getImageSize(XFile imageFile) async {
     final File file = File(imageFile.path);

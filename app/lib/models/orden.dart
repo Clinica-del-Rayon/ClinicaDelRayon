@@ -114,6 +114,52 @@ class Servicio {
   }
 }
 
+/// Clase AvanceServicio - Representa un avance/actualización de un servicio
+class AvanceServicio {
+  final String id;
+  final DateTime fecha;
+  final String observaciones;
+  final List<String> fotosUrls;
+  final int progresoAnterior;
+  final int progresoNuevo;
+
+  AvanceServicio({
+    required this.id,
+    required this.fecha,
+    required this.observaciones,
+    this.fotosUrls = const [],
+    required this.progresoAnterior,
+    required this.progresoNuevo,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'fecha': fecha.toIso8601String(),
+      'observaciones': observaciones,
+      'fotos_urls': fotosUrls,
+      'progreso_anterior': progresoAnterior,
+      'progreso_nuevo': progresoNuevo,
+    };
+  }
+
+  factory AvanceServicio.fromJson(Map<dynamic, dynamic> json) {
+    return AvanceServicio(
+      id: json['id'] as String? ?? '',
+      fecha: json['fecha'] != null
+          ? DateTime.parse(json['fecha'] as String)
+          : DateTime.now(),
+      observaciones: json['observaciones'] as String? ?? '',
+      fotosUrls: (json['fotos_urls'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      progresoAnterior: json['progreso_anterior'] as int? ?? 0,
+      progresoNuevo: json['progreso_nuevo'] as int? ?? 0,
+    );
+  }
+}
+
 /// Clase DetalleOrden - Representa un servicio específico dentro de una orden
 class DetalleOrden {
   final String id; // ID único del detalle
@@ -124,6 +170,8 @@ class DetalleOrden {
   final int progreso; // Porcentaje de 0-100
   final String? observacionesTecnicas; // Notas del trabajador
   final String? trabajadorAsignado; // UID del trabajador asignado (opcional)
+  final List<String> fotosIniciales; // Fotos tomadas al crear la orden
+  final List<AvanceServicio> avances; // Historial de avances del servicio
 
   DetalleOrden({
     required this.id,
@@ -134,6 +182,8 @@ class DetalleOrden {
     this.progreso = 0,
     this.observacionesTecnicas,
     this.trabajadorAsignado,
+    this.fotosIniciales = const [],
+    this.avances = const [],
   });
 
   /// Convertir a Map para guardar en Firebase
@@ -147,6 +197,8 @@ class DetalleOrden {
       'progreso': progreso,
       'observaciones_tecnicas': observacionesTecnicas,
       'trabajador_asignado': trabajadorAsignado,
+      'fotos_iniciales': fotosIniciales,
+      'avances': avances.map((a) => a.toJson()).toList(),
     };
   }
 
@@ -161,6 +213,14 @@ class DetalleOrden {
       progreso: json['progreso'] as int? ?? 0,
       observacionesTecnicas: json['observaciones_tecnicas'] as String?,
       trabajadorAsignado: json['trabajador_asignado'] as String?,
+      fotosIniciales: (json['fotos_iniciales'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      avances: (json['avances'] as List<dynamic>?)
+              ?.map((a) => AvanceServicio.fromJson(a as Map<dynamic, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
@@ -174,6 +234,8 @@ class DetalleOrden {
     int? progreso,
     String? observacionesTecnicas,
     String? trabajadorAsignado,
+    List<String>? fotosIniciales,
+    List<AvanceServicio>? avances,
   }) {
     return DetalleOrden(
       id: id ?? this.id,
@@ -184,6 +246,8 @@ class DetalleOrden {
       progreso: progreso ?? this.progreso,
       observacionesTecnicas: observacionesTecnicas ?? this.observacionesTecnicas,
       trabajadorAsignado: trabajadorAsignado ?? this.trabajadorAsignado,
+      fotosIniciales: fotosIniciales ?? this.fotosIniciales,
+      avances: avances ?? this.avances,
     );
   }
 

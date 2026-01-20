@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/database_service.dart';
+import '../services/storage_service.dart';
 import '../models/orden.dart';
 import '../models/usuario.dart';
 import '../models/vehiculo.dart';
+import '../widgets/fotos_servicio_selector.dart';
+import '../widgets/searchable_dropdown.dart';
 
 class CreateOrdenScreen extends StatefulWidget {
   const CreateOrdenScreen({super.key});
@@ -15,6 +19,7 @@ class CreateOrdenScreen extends StatefulWidget {
 
 class _CreateOrdenScreenState extends State<CreateOrdenScreen> {
   final DatabaseService _dbService = DatabaseService();
+  final StorageService _storageService = StorageService();
   final _formKey = GlobalKey<FormState>();
 
   Cliente? _clienteSeleccionado;
@@ -25,6 +30,7 @@ class _CreateOrdenScreenState extends State<CreateOrdenScreen> {
   List<Vehiculo> _vehiculosDelCliente = [];
   List<Servicio> _todosServicios = [];
   List<DetalleOrden> _serviciosSeleccionados = [];
+  Map<String, List<XFile>> _fotosServiciosLocales = {}; // Mapa de servicioId -> fotos locales
 
   bool _isLoading = false;
   bool _isLoadingData = true;
@@ -82,90 +88,110 @@ class _CreateOrdenScreenState extends State<CreateOrdenScreen> {
       text: servicio.precioEstimado?.toStringAsFixed(2) ?? '0',
     );
     final observacionesController = TextEditingController();
+    List<XFile> fotosServicio = [];
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Agregar: ${servicio.nombre}'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (servicio.descripcion != null) ...[
-                Text(
-                  servicio.descripcion!,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text('Agregar: ${servicio.nombre}'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (servicio.descripcion != null) ...[
+                      Text(
+                        servicio.descripcion!,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    Text(
+                      'Precio base: \$${servicio.precioEstimado?.toStringAsFixed(2) ?? '0'}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: precioController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'Precio específico para esta orden',
+                        prefixIcon: Icon(Icons.attach_money),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: observacionesController,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Observaciones (Opcional)',
+                        prefixIcon: Icon(Icons.note),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FotosServicioSelector(
+                      titulo: 'Fotos del servicio (Opcional)',
+                      onFotosSeleccionadas: (fotos) {
+                        setDialogState(() {
+                          fotosServicio = fotos;
+                        });
+                      },
+                      maxFotos: 5,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-              ],
-              Text(
-                'Precio base: \$${servicio.precioEstimado?.toStringAsFixed(2) ?? '0'}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: precioController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Precio específico para esta orden',
-                  prefixIcon: Icon(Icons.attach_money),
-                  border: OutlineInputBorder(),
-                ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: observacionesController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Observaciones (Opcional)',
-                  prefixIcon: Icon(Icons.note),
-                  border: OutlineInputBorder(),
-                ),
+              ElevatedButton(
+                onPressed: () {
+                  final precio = double.tryParse(precioController.text);
+                  if (precio != null && precio > 0) {
+                    _agregarServicio(
+                      servicio,
+                      precio,
+                      observacionesController.text.trim().isEmpty
+                          ? null
+                          : observacionesController.text.trim(),
+                      fotosServicio,
+                    );
+                    Navigator.pop(context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ingresa un precio válido'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                child: const Text('Agregar'),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final precio = double.tryParse(precioController.text);
-              if (precio != null && precio > 0) {
-                _agregarServicio(
-                  servicio,
-                  precio,
-                  observacionesController.text.trim().isEmpty
-                      ? null
-                      : observacionesController.text.trim(),
-                );
-                Navigator.pop(context);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Ingresa un precio válido'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-            child: const Text('Agregar'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  void _agregarServicio(Servicio servicio, double precio, String? observaciones) {
+  void _agregarServicio(Servicio servicio, double precio, String? observaciones, List<XFile> fotos) {
+    final detalleId = DateTime.now().millisecondsSinceEpoch.toString();
     final detalle = DetalleOrden(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: detalleId,
       servicioId: servicio.id,
       servicioNombre: servicio.nombre,
       precio: precio,
@@ -176,12 +202,17 @@ class _CreateOrdenScreenState extends State<CreateOrdenScreen> {
 
     setState(() {
       _serviciosSeleccionados.add(detalle);
+      if (fotos.isNotEmpty) {
+        _fotosServiciosLocales[detalleId] = fotos;
+      }
     });
   }
 
   void _removerServicio(int index) {
+    final detalleId = _serviciosSeleccionados[index].id;
     setState(() {
       _serviciosSeleccionados.removeAt(index);
+      _fotosServiciosLocales.remove(detalleId);
     });
   }
 
@@ -250,8 +281,50 @@ class _CreateOrdenScreenState extends State<CreateOrdenScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Verificar si el vehículo ya tiene órdenes activas
+      final tieneOrdenesActivas = await _dbService.vehiculoTieneOrdenesActivas(_vehiculoSeleccionado!.id!);
+      if (tieneOrdenesActivas) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Este vehículo ya tiene una orden activa. No se puede crear otra hasta que se entregue.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
       // Generar ID único para la orden
       final String ordenId = FirebaseDatabase.instance.ref().child('ordenes').push().key!;
+
+      // Subir fotos de servicios y actualizar detalles
+      List<DetalleOrden> detallesConFotos = [];
+      for (var detalle in _serviciosSeleccionados) {
+        List<String> fotosUrls = [];
+
+        // Si este servicio tiene fotos locales, subirlas
+        if (_fotosServiciosLocales.containsKey(detalle.id)) {
+          final fotos = _fotosServiciosLocales[detalle.id]!;
+          for (int i = 0; i < fotos.length; i++) {
+            try {
+              final url = await _storageService.uploadServicePhoto(
+                ordenId,
+                detalle.id,
+                fotos[i],
+                i,
+              );
+              fotosUrls.add(url);
+            } catch (e) {
+              print('Error al subir foto $i del servicio ${detalle.servicioNombre}: $e');
+            }
+          }
+        }
+
+        // Crear detalle con las URLs de las fotos
+        detallesConFotos.add(detalle.copyWith(fotosIniciales: fotosUrls));
+      }
 
       final orden = Orden(
         id: ordenId,
@@ -260,7 +333,7 @@ class _CreateOrdenScreenState extends State<CreateOrdenScreen> {
         fechaCreacion: DateTime.now(),
         fechaPromesa: _fechaPromesa,
         estado: EstadoOrden.EN_COTIZACION,
-        detalles: _serviciosSeleccionados,
+        detalles: detallesConFotos,
       );
 
       await _dbService.createOrden(orden);
@@ -360,24 +433,20 @@ class _CreateOrdenScreenState extends State<CreateOrdenScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<Cliente>(
+              SearchableDropdown<Cliente>(
                 value: _clienteSeleccionado,
-                decoration: const InputDecoration(
-                  labelText: 'Cliente',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
-                ),
-                items: _clientes.map((cliente) {
-                  return DropdownMenuItem(
-                    value: cliente,
-                    child: Text('${cliente.nombres} ${cliente.apellidos}'),
-                  );
-                }).toList(),
+                items: _clientes,
+                itemLabel: (cliente) => '${cliente.nombres} ${cliente.apellidos}',
+                labelText: 'Cliente',
+                prefixIcon: Icons.person,
                 onChanged: (cliente) {
                   setState(() {
                     _clienteSeleccionado = cliente;
                     if (cliente != null) {
                       _cargarVehiculosDelCliente(cliente.uid);
+                    } else {
+                      _vehiculosDelCliente = [];
+                      _vehiculoSeleccionado = null;
                     }
                   });
                 },
@@ -394,26 +463,18 @@ class _CreateOrdenScreenState extends State<CreateOrdenScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<Vehiculo>(
+              SearchableDropdown<Vehiculo>(
                 value: _vehiculoSeleccionado,
-                decoration: const InputDecoration(
-                  labelText: 'Vehículo',
-                  prefixIcon: Icon(Icons.directions_car),
-                  border: OutlineInputBorder(),
-                ),
-                items: _vehiculosDelCliente.map((vehiculo) {
-                  return DropdownMenuItem(
-                    value: vehiculo,
-                    child: Text('${vehiculo.placa} - ${vehiculo.marca} ${vehiculo.modelo}'),
-                  );
-                }).toList(),
-                onChanged: _clienteSeleccionado == null
-                    ? null
-                    : (vehiculo) {
-                        setState(() {
-                          _vehiculoSeleccionado = vehiculo;
-                        });
-                      },
+                items: _vehiculosDelCliente,
+                itemLabel: (vehiculo) => '${vehiculo.placa} - ${vehiculo.marca} ${vehiculo.modelo}',
+                labelText: 'Vehículo',
+                prefixIcon: Icons.directions_car,
+                enabled: _clienteSeleccionado != null,
+                onChanged: (vehiculo) {
+                  setState(() {
+                    _vehiculoSeleccionado = vehiculo;
+                  });
+                },
                 validator: (value) {
                   if (value == null) return 'Selecciona un vehículo';
                   return null;

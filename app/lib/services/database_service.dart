@@ -550,6 +550,19 @@ class DatabaseService {
     }
   }
 
+  /// Verificar si un vehículo tiene órdenes activas (EN_COTIZACION, EN_PROCESO, FINALIZADO)
+  Future<bool> vehiculoTieneOrdenesActivas(String vehiculoId) async {
+    try {
+      final ordenes = await getOrdenesByVehiculo(vehiculoId);
+      return ordenes.any((orden) =>
+          orden.estado == EstadoOrden.EN_COTIZACION ||
+          orden.estado == EstadoOrden.EN_PROCESO ||
+          orden.estado == EstadoOrden.FINALIZADO);
+    } catch (e) {
+      throw 'Error al verificar órdenes activas: ${e.toString()}';
+    }
+  }
+
   /// Actualizar orden
   Future<void> updateOrden(String id, Map<String, dynamic> updates) async {
     try {

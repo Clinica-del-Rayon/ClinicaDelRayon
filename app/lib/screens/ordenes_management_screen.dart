@@ -293,7 +293,7 @@ class _OrdenesManagementScreenState extends State<OrdenesManagementScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => OrdenDetailsScreen(
-                                orden: orden,
+                                ordenInicial: orden,
                                 cliente: cliente,
                                 vehiculo: vehiculo,
                               ),

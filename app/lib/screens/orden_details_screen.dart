@@ -2,18 +2,65 @@ import 'package:flutter/material.dart';
 import '../models/orden.dart';
 import '../models/usuario.dart';
 import '../models/vehiculo.dart';
+import '../services/database_service.dart';
+import 'edit_orden_screen.dart';
+import 'avances_servicio_screen.dart';
 
-class OrdenDetailsScreen extends StatelessWidget {
-  final Orden orden;
+class OrdenDetailsScreen extends StatefulWidget {
+  final Orden ordenInicial;
   final Cliente? cliente;
   final Vehiculo? vehiculo;
 
   const OrdenDetailsScreen({
     super.key,
-    required this.orden,
+    required this.ordenInicial,
     this.cliente,
     this.vehiculo,
   });
+
+  @override
+  State<OrdenDetailsScreen> createState() => _OrdenDetailsScreenState();
+}
+
+class _OrdenDetailsScreenState extends State<OrdenDetailsScreen> {
+  final DatabaseService _dbService = DatabaseService();
+  late Orden orden;
+  Cliente? cliente;
+  Vehiculo? vehiculo;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    orden = widget.ordenInicial;
+    cliente = widget.cliente;
+    vehiculo = widget.vehiculo;
+  }
+
+  Future<void> _recargarOrden() async {
+    setState(() => _isLoading = true);
+    try {
+      final ordenActualizada = await _dbService.getOrden(orden.id);
+      if (ordenActualizada != null && mounted) {
+        setState(() {
+          orden = ordenActualizada;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al recargar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   Color _getEstadoColor(EstadoOrden estado) {
     switch (estado) {
@@ -47,6 +94,39 @@ class OrdenDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Orden #${orden.id.substring(0, 8)}'),
         backgroundColor: Colors.teal,
+        actions: [
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                final resultado = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditOrdenScreen(orden: orden),
+                  ),
+                );
+                // Recargar si hubo cambios
+                if (resultado == true) {
+                  await _recargarOrden();
+                }
+              },
+              tooltip: 'Editar Orden',
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -254,6 +334,45 @@ class OrdenDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
+                  // Progreso Total
+                  const Text(
+                    'Progreso Total',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    elevation: 3,
+                    color: Colors.teal.withOpacity(0.1),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Text(
+                            '${orden.calcularProgresoPromedio()}%',
+                            style: const TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.teal,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          LinearProgressIndicator(
+                            value: orden.calcularProgresoPromedio() / 100,
+                            minHeight: 12,
+                            backgroundColor: Colors.grey[300],
+                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.teal),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Progreso promedio de todos los servicios',
+                            style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
                   // Servicios
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -384,6 +503,78 @@ class OrdenDetailsScreen extends StatelessWidget {
                                   style: TextStyle(color: Colors.grey[700]),
                                 ),
                               ],
+
+                              // Fotos iniciales
+                              if (detalle.fotosIniciales.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                const Divider(),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Fotos iniciales:',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  height: 100,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: detalle.fotosIniciales.length,
+                                    itemBuilder: (context, fotoIndex) {
+                                      return Container(
+                                        margin: const EdgeInsets.only(right: 8),
+                                        width: 100,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.grey[300]!),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.network(
+                                            detalle.fotosIniciales[fotoIndex],
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Container(
+                                                color: Colors.grey[300],
+                                                child: const Icon(Icons.broken_image),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+
+                              // Botón de avances
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () async {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AvancesServicioScreen(
+                                          orden: orden,
+                                          detalle: detalle,
+                                          detalleIndex: index,
+                                        ),
+                                      ),
+                                    );
+                                    // Recargar orden después de ver/agregar avances
+                                    await _recargarOrden();
+                                  },
+                                  icon: const Icon(Icons.history),
+                                  label: Text('Ver Avances (${detalle.avances.length})'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.teal,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
