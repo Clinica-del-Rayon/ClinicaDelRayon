@@ -47,7 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       // Crear objeto Cliente con todos los datos
       final cliente = Cliente(
-        uid: '', // Se actualizará con el UID de Firebase Auth
+        uid: '',
         nombres: _nombresController.text.trim(),
         apellidos: _apellidosController.text.trim(),
         tipoDocumento: _tipoDocumento,
@@ -58,78 +58,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _passwordController.text,
       );
 
-      // Registrar cliente (crea en Auth y Realtime Database)
+      // 1. Registramos (y nos quedamos logueados)
       await _authService.registerCliente(cliente: cliente);
 
-      // Cerrar sesión para que el usuario vuelva a login manualmente
-      await _authService.signOut();
-
       if (mounted) {
-        // Mostrar modal de éxito PRIMERO
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              title: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 30),
-                  SizedBox(width: 10),
-                  Expanded(child: Text('¡Cuenta Creada!')),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Tu cuenta ha sido creada correctamente.',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                  SizedBox(height: 12),
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green, width: 1),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.green, size: 20),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Ya puedes iniciar sesión con tus credenciales.',
-                            style: TextStyle(fontSize: 14, color: Colors.green[900]),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Cerrar modal
-                    Navigator.of(context).pop(); // Volver a login
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  child: Text(
-                    'Ir a Iniciar Sesión',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            );
-          },
+        // 2. Cerramos esta pantalla para que el AuthWrapper muestre el Home
+        Navigator.pop(context);
+
+        // 3. Feedback visual
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registro exitoso. ¡Bienvenido!'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {

@@ -45,6 +45,7 @@ class _CreateClienteScreenState extends State<CreateClienteScreen> {
     super.dispose();
   }
 
+  //Arreglado bugsito
   Future<void> _createCliente() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -63,38 +64,22 @@ class _CreateClienteScreenState extends State<CreateClienteScreen> {
         password: _passwordController.text,
       );
 
-      // Crear cliente y obtener su UID
       final newUserId = await _authService.registerCliente(cliente: cliente);
 
-      // Subir foto de perfil si existe
       if (_fotoPerfil != null) {
         try {
           final fotoUrl = await _storageService.uploadUserProfilePicture(newUserId, _fotoPerfil!);
-          // Actualizar foto en la base de datos usando el UID del nuevo usuario
           await _authService.updateOtherUserProfile(newUserId, {'foto_perfil': fotoUrl});
         } catch (e) {
           print('Error al subir foto de perfil: $e');
-          // Continuar aunque falle la foto
         }
       }
 
-      if (mounted) {
-        // Cerrar pantalla de creación y mostrar mensaje de éxito
-        Navigator.of(context).pop(); // Volver a la pantalla anterior
-
+      if (mounted) {// YA NO HAY Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text('Cliente creado exitosamente'),
-                ),
-              ],
-            ),
+          const SnackBar(
+            content: Text('¡Cuenta creada! Entrando a Clínica del Rayón...'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
           ),
         );
       }

@@ -34,11 +34,6 @@ class HomeScreen extends StatelessWidget {
         final usuario = snapshot.data;
 
         if (usuario == null) {
-          // Si no hay datos del usuario, cerrar sesión y volver a login
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await authService.signOut();
-          });
-
           return const Scaffold(
             body: Center(
               child: Column(
@@ -46,24 +41,13 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Cerrando sesión...'),
+                  Text('Sincronizando perfil...'),
                 ],
               ),
             ),
           );
         }
 
-        // DEBUG: Imprimir información del usuario
-        print('=== DEBUG HOME SCREEN ===');
-        print('Usuario: ${usuario.nombres} ${usuario.apellidos}');
-        print('Tipo de clase: ${usuario.runtimeType}');
-        print('Rol del usuario: ${usuario.rol}');
-        print('Rol es ADMIN: ${usuario.rol == RolUsuario.ADMIN}');
-        print('Rol es TRABAJADOR: ${usuario.rol == RolUsuario.TRABAJADOR}');
-        print('Rol es CLIENTE: ${usuario.rol == RolUsuario.CLIENTE}');
-        print('========================');
-
-        // Mostrar pantalla según el rol
         switch (usuario.rol) {
           case RolUsuario.CLIENTE:
             return ClienteHomeScreen(
@@ -85,4 +69,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
