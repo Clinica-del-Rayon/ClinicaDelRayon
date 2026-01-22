@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import '../providers/provider_state.dart';
 import '../screens/login_screen.dart';
 import '../screens/home_screen.dart';
 
@@ -8,11 +8,9 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        // Mientras se carga
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    return Consumer<ProviderState>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
@@ -20,21 +18,10 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        // Si hay error
-        if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(
-              child: Text('Error: ${snapshot.error}'),
-            ),
-          );
-        }
-
-        // Si el usuario está autenticado
-        if (snapshot.hasData) {
+        if (provider.currentUser != null) {
           return const HomeScreen();
         }
 
-        // Si el usuario no está autenticado
         return const LoginScreen();
       },
     );

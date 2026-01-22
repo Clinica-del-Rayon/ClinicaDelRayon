@@ -28,10 +28,18 @@ import 'screens/edit_vehiculo_screen.dart';
 import 'screens/select_clientes_vehiculo_screen.dart';
 import 'screens/create_vehiculo_multi_screen.dart';
 
+import 'package:provider/provider.dart';
+import 'providers/provider_state.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ProviderState(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
