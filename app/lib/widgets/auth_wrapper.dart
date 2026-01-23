@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/provider_state.dart';
 import '../screens/login_screen.dart';
@@ -27,4 +28,3 @@ class AuthWrapper extends StatelessWidget {
     );
   }
 }
-
