@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../models/usuario.dart';
-import 'cliente_home_screen.dart';
-import 'trabajador_home_screen.dart';
-import 'admin_home_screen.dart';
+import '../../services/auth_service.dart';
+import '../../models/usuario.dart';
+import '../cliente_home_screen.dart';
+import '../trabajador_home_screen.dart';
+import '../admin/admin_home_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

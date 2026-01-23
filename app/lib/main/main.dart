@@ -1,37 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'widgets/auth_wrapper.dart';
-import 'screens/login_screen.dart';
-import 'screens/register_screen.dart';
-import 'screens/register_trabajador_screen.dart';
-import 'screens/forgot_password_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/create_user_screen.dart';
-import 'screens/clientes_list_screen.dart';
-import 'screens/vehiculos_cliente_screen.dart';
-import 'screens/create_vehiculo_screen.dart';
-import 'screens/select_account_type_screen.dart';
-import 'screens/edit_users_screen.dart';
-import 'screens/edit_user_screen.dart';
-import 'screens/create_cliente_screen.dart';
-import 'screens/create_trabajador_screen.dart';
-import 'screens/create_admin_screen.dart';
-import 'screens/usuarios_management_screen.dart';
-import 'screens/user_details_screen.dart';
-import 'screens/vehiculos_management_screen.dart';
-import 'screens/vehiculo_details_screen.dart';
-import 'screens/servicios_management_screen.dart';
-import 'screens/create_servicio_screen.dart';
-import 'screens/ordenes_management_screen.dart';
-import 'screens/create_orden_screen.dart';
-import 'screens/edit_vehiculo_screen.dart';
-import 'screens/select_clientes_vehiculo_screen.dart';
-import 'screens/create_vehiculo_multi_screen.dart';
+import '../widgets/auth_wrapper.dart';
+import '../screens/login_screen.dart';
+import '../screens/register_screen.dart';
+import '../screens/register_trabajador_screen.dart';
+import '../screens/forgot_password_screen.dart';
+import '../screens/common/home_screen.dart';
+import '../screens/create_user_screen.dart';
+import '../screens/clientes_list_screen.dart';
+import '../screens/vehiculos_cliente_screen.dart';
+import '../screens/create_vehiculo_screen.dart';
+import '../screens/select_account_type_screen.dart';
+import '../screens/admin/edit_user_screen.dart';
+import '../screens/create_cliente_screen.dart';
+import '../screens/create_trabajador_screen.dart';
+import '../screens/create_admin_screen.dart';
+import '../screens/admin/usuarios_management_screen.dart';
+import '../screens/admin/user_details_screen.dart';
+import '../screens/admin/vehiculos_management_screen.dart';
+import '../screens/vehiculo_details_screen.dart';
+import '../screens/admin/servicios_management_screen.dart';
+import '../screens/create_servicio_screen.dart';
+import '../screens/admin/ordenes_management_screen.dart';
+import '../screens/create_orden_screen.dart';
+import '../screens/edit_vehiculo_screen.dart';
+import '../screens/select_clientes_vehiculo_screen.dart';
+import '../screens/create_vehiculo_multi_screen.dart';
+
+import 'package:provider/provider.dart';
+import '../providers/provider_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ProviderState(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -56,7 +63,6 @@ class MyApp extends StatelessWidget {
         '/create-user': (context) => const CreateUserScreen(),
         '/clientes-list': (context) => const ClientesListScreen(),
         '/select-account-type': (context) => const SelectAccountTypeScreen(),
-        '/edit-users': (context) => const EditUsersScreen(),
         '/edit-user': (context) => const EditUserScreen(),
         '/create-cliente': (context) => const CreateClienteScreen(),
         '/create-trabajador': (context) => const CreateTrabajadorScreen(),

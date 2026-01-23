@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/database_service.dart';
-import '../services/storage_service.dart';
-import '../models/usuario.dart';
-import '../widgets/foto_perfil_selector.dart';
+import '../../services/database_service.dart';
+import '../../services/storage_service.dart';
+import '../../models/usuario.dart';
+import '../../widgets/foto_perfil_selector.dart';
 
 class EditUserScreen extends StatefulWidget {
   const EditUserScreen({super.key});
@@ -35,9 +35,13 @@ class _EditUserScreenState extends State<EditUserScreen> {
   String? _fotoPerfilUrl; // URL actual de la foto
   XFile? _nuevaFotoPerfil; // Nueva foto seleccionada
 
+  bool _isInitialized = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    
+    if (_isInitialized) return;
 
     // Obtener el usuario de los argumentos
     _usuario = ModalRoute.of(context)!.settings.arguments as Usuario;
@@ -69,6 +73,8 @@ class _EditUserScreenState extends State<EditUserScreen> {
       _sueldoController = TextEditingController(text: '0');
       _estadoDisponibilidad = true;
     }
+    
+    _isInitialized = true;
   }
 
   @override
@@ -195,12 +201,28 @@ class _EditUserScreenState extends State<EditUserScreen> {
     }
   }
 
+  // Modern Colors
+  final Color _primaryColor = const Color(0xFF1E88E5);
+  final Color _backgroundColor = const Color(0xFFF5F7FA);
+
+  // ... (existing variables)
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
-        title: const Text('Editar Usuario'),
-        backgroundColor: Colors.purple,
+        title: Text(
+          'Editar Usuario',
+          style: TextStyle(color: Colors.blueGrey[800], fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: _backgroundColor,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.blueGrey[700]),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           if (_isLoading)
             const Center(
@@ -210,7 +232,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
-                    color: Colors.white,
+                    color: Color(0xFF1E88E5),
                     strokeWidth: 2,
                   ),
                 ),
@@ -221,7 +243,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           children: [
             // Foto de perfil
             FotoPerfilSelector(
@@ -238,184 +260,228 @@ class _EditUserScreenState extends State<EditUserScreen> {
                 });
               },
             ),
-            const SizedBox(height: 24),
-
-            // Selector de Rol
-            DropdownButtonFormField<RolUsuario>(
-              value: _rolSeleccionado,
-              decoration: const InputDecoration(
-                labelText: 'Rol del Usuario',
-                prefixIcon: Icon(Icons.admin_panel_settings),
-                border: OutlineInputBorder(),
-              ),
-              items: RolUsuario.values.map((rol) {
-                return DropdownMenuItem(
-                  value: rol,
-                  child: Text(rol.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _rolSeleccionado = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Campos comunes
-            TextFormField(
-              controller: _nombresController,
-              decoration: const InputDecoration(
-                labelText: 'Nombres',
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) => value?.isEmpty ?? true ? 'Campo requerido' : null,
-            ),
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _apellidosController,
-              decoration: const InputDecoration(
-                labelText: 'Apellidos',
-                prefixIcon: Icon(Icons.person_outline),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) => value?.isEmpty ?? true ? 'Campo requerido' : null,
-            ),
-            const SizedBox(height: 16),
-
-            DropdownButtonFormField<TipoDocumento>(
-              value: _tipoDocumento,
-              decoration: const InputDecoration(
-                labelText: 'Tipo de Documento',
-                prefixIcon: Icon(Icons.credit_card),
-                border: OutlineInputBorder(),
-              ),
-              items: TipoDocumento.values.map((tipo) {
-                return DropdownMenuItem(
-                  value: tipo,
-                  child: Text(tipo.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _tipoDocumento = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _numeroDocumentoController,
-              decoration: const InputDecoration(
-                labelText: 'Número de Documento',
-                prefixIcon: Icon(Icons.badge),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) => value?.isEmpty ?? true ? 'Campo requerido' : null,
-            ),
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _correoController,
-              enabled: false, // Email no se puede cambiar
-              decoration: const InputDecoration(
-                labelText: 'Correo Electrónico',
-                prefixIcon: Icon(Icons.email),
-                border: OutlineInputBorder(),
-                helperText: 'El correo no se puede modificar',
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _telefonoController,
-              decoration: const InputDecoration(
-                labelText: 'Teléfono',
-                prefixIcon: Icon(Icons.phone),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) => value?.isEmpty ?? true ? 'Campo requerido' : null,
-            ),
-            const SizedBox(height: 16),
-
-            // Campos específicos según el rol
-            if (_rolSeleccionado == RolUsuario.CLIENTE) ...[
-              TextFormField(
-                controller: _direccionController,
-                decoration: const InputDecoration(
-                  labelText: 'Dirección',
-                  prefixIcon: Icon(Icons.home),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value?.isEmpty ?? true ? 'Campo requerido' : null,
-              ),
-            ],
-
-            if (_rolSeleccionado == RolUsuario.TRABAJADOR) ...[
-              TextFormField(
-                controller: _areaController,
-                decoration: const InputDecoration(
-                  labelText: 'Área',
-                  prefixIcon: Icon(Icons.work),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value?.isEmpty ?? true ? 'Campo requerido' : null,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _sueldoController,
-                decoration: const InputDecoration(
-                  labelText: 'Sueldo',
-                  prefixIcon: Icon(Icons.attach_money),
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) return 'Campo requerido';
-                  if (double.tryParse(value!) == null) return 'Ingrese un número válido';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              SwitchListTile(
-                title: const Text('Estado de Disponibilidad'),
-                subtitle: Text(_estadoDisponibilidad ? 'Disponible' : 'No disponible'),
-                value: _estadoDisponibilidad,
-                onChanged: (value) {
-                  setState(() {
-                    _estadoDisponibilidad = value;
-                  });
-                },
-              ),
-            ],
-
             const SizedBox(height: 32),
 
-            // Botón Guardar Cambios
-            ElevatedButton.icon(
-              onPressed: _isLoading ? null : _saveChanges,
-              icon: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+            _buildSectionLabel('Rol y Permisos'),
+            _buildDropdown(
+              value: _rolSeleccionado,
+              items: RolUsuario.values,
+              label: 'Rol del Usuario',
+              icon: Icons.admin_panel_settings_outlined,
+              onChanged: (val) => setState(() => _rolSeleccionado = val!),
+              itemLabel: (val) => val.name,
+            ),
+            const SizedBox(height: 24),
+
+            _buildSectionLabel('Información Personal'),
+            _buildTextField(
+              controller: _nombresController,
+              label: 'Nombres',
+              icon: Icons.person_outline,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _apellidosController,
+              label: 'Apellidos',
+              icon: Icons.person_outline,
+            ),
+            const SizedBox(height: 16),
+            _buildDropdown(
+              value: _tipoDocumento,
+              items: TipoDocumento.values,
+              label: 'Tipo de Documento',
+              icon: Icons.credit_card_outlined,
+              onChanged: (val) => setState(() => _tipoDocumento = val!),
+              itemLabel: (val) => val.name,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _numeroDocumentoController,
+              label: 'Número de Documento',
+              icon: Icons.badge_outlined,
+            ),
+            const SizedBox(height: 24),
+
+            _buildSectionLabel('Contacto'),
+            _buildTextField(
+              controller: _correoController,
+              label: 'Correo Electrónico',
+              icon: Icons.email_outlined,
+              enabled: false,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _telefonoController,
+              label: 'Teléfono',
+              icon: Icons.phone_outlined,
+            ),
+            const SizedBox(height: 24),
+
+            // Campos específicos
+            if (_rolSeleccionado == RolUsuario.CLIENTE) ...[
+              _buildSectionLabel('Datos de Cliente'),
+              _buildTextField(
+                controller: _direccionController,
+                label: 'Dirección',
+                icon: Icons.location_on_outlined,
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            if (_rolSeleccionado != RolUsuario.CLIENTE) ...[
+              _buildSectionLabel('Datos Laborales'),
+              if (_rolSeleccionado != RolUsuario.ADMIN) ...[
+                _buildTextField(
+                  controller: _areaController,
+                  label: 'Área',
+                  icon: Icons.work_outline,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _sueldoController,
+                  label: 'Sueldo',
+                  icon: Icons.attach_money,
+                  keyboardType: TextInputType.number,
+                  validator: (val) {
+                    if (val?.isEmpty ?? true) return 'Campo requerido';
+                    if (double.tryParse(val!) == null) return 'Ingrese un número válido';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 5, offset: Offset(0, 2)),
+                    ],
+                  ),
+                  child: SwitchListTile(
+                    title: const Text('Disponible', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(_estadoDisponibilidad ? 'El trabajador recibirá órdenes' : 'No recibirá órdenes'),
+                    value: _estadoDisponibilidad,
+                    activeColor: _primaryColor,
+                    onChanged: (value) => setState(() => _estadoDisponibilidad = value),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ],
+
+            // Botón Guardar
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _saveChanges,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primaryColor,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Guardar Cambios',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
-                    )
-                  : const Icon(Icons.save),
-              label: Text(_isLoading ? 'Guardando...' : 'Guardar Cambios'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
+            SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.blueGrey[400],
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool enabled = true,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        enabled: enabled,
+        keyboardType: keyboardType,
+        style: TextStyle(fontWeight: FontWeight.w500, color: enabled ? Colors.black87 : Colors.grey),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: enabled ? const Color(0xFF1E88E5) : Colors.grey),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          labelStyle: TextStyle(color: Colors.grey[600]),
+        ),
+        validator: validator ?? (value) => value?.isEmpty ?? true ? 'Campo requerido' : null,
+      ),
+    );
+  }
+
+  Widget _buildDropdown<T>({
+    required T value,
+    required List<T> items,
+    required String label,
+    required IconData icon,
+    required ValueChanged<T?> onChanged,
+    required String Function(T) itemLabel,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: DropdownButtonFormField<T>(
+        value: value,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF1E88E5)),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        items: items.map((item) {
+          return DropdownMenuItem(
+            value: item,
+            child: Text(itemLabel(item), style: TextStyle(fontWeight: FontWeight.w500)),
+          );
+        }).toList(),
+        onChanged: onChanged,
       ),
     );
   }
