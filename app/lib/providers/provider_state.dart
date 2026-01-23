@@ -11,11 +11,13 @@ class ProviderState extends ChangeNotifier {
   User? _currentUser;
   models.Usuario? _currentUserData;
   models.RolUsuario? _currentUserRole;
+  List<models.Usuario> _allUsers = []; // Lista global de usuarios
   bool _isLoading = true;
 
   User? get currentUser => _currentUser;
   models.Usuario? get currentUserData => _currentUserData;
   models.RolUsuario? get currentUserRole => _currentUserRole;
+  List<models.Usuario> get allUsers => _allUsers;
   bool get isLoading => _isLoading;
 
   ProviderState() {
@@ -27,9 +29,11 @@ class ProviderState extends ChangeNotifier {
       _currentUser = user;
       if (user != null) {
         _loadUserData();
+        fetchAllUsers(); // Cargar la lista al iniciar sesión
       } else {
         _currentUserData = null;
         _currentUserRole = null;
+        _allUsers = [];
         _isLoading = false;
         notifyListeners();
       }
@@ -47,6 +51,19 @@ class ProviderState extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Cargar todos los usuarios desde la fuente de verdad
+  Future<void> fetchAllUsers() async {
+    // No ponemos _isLoading = true global para no bloquear toda la app, 
+    // pero idealmente deberíamos tener un loading local para la lista.
+    // Por ahora, solo actualizamos.
+    try {
+      _allUsers = await _dbService.getAllUsuarios();
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error fetching all users: $e");
     }
   }
 

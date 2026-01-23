@@ -61,6 +61,11 @@ Este documento describe las pantallas existentes en la aplicación, su propósit
 
 ## 3. Gestión de Usuarios
 
+### Diseño General (Admin UI)
+Todas las pantallas de gestión (`Usuarios`, `Vehículos`, `Servicios`, `Órdenes`) han sido actualizadas al nuevo estándar visual:
+- **Paleta**: Azul Principal (`0xFF1E88E5`) y Fondo Neutro (`0xFFF5F7FA`).
+- **Componentes**: AppBars personalizadas (sin elevación), Buscadores Flotantes y Tarjetas con sombra suave (`blurRadius: 15`).
+
 ### `UsuariosManagementScreen`
 - **Ubicación:** `lib/screens/usuarios_management_screen.dart`
 - **Propósito:** Lista y administración de todos los usuarios.

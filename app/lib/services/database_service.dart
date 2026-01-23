@@ -75,6 +75,35 @@ class DatabaseService {
     }
   }
 
+  /// Obtener todos los usuarios (Fuente de verdad unificada)
+  Future<List<models.Usuario>> getAllUsuarios() async {
+    try {
+      final snapshot = await _usuariosRef.get(); // Leer de 'usuarios', no de las listas separadas
+
+      if (!snapshot.exists) {
+        return [];
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data.values.map((u) {
+        final userMap = Map<String, dynamic>.from(u as Map);
+        final rolStr = userMap['rol'] as String? ?? 'CLIENTE';
+        final rol = models.RolUsuario.fromJson(rolStr);
+
+        // Deserialización Polimórfica
+        switch (rol) {
+          case models.RolUsuario.CLIENTE:
+            return models.Cliente.fromJson(userMap);
+          case models.RolUsuario.TRABAJADOR:
+          case models.RolUsuario.ADMIN:
+            return models.Trabajador.fromJson(userMap);
+        }
+      }).toList();
+    } catch (e) {
+      throw 'Error al obtener usuarios: ${e.toString()}';
+    }
+  }
+
   /// Obtener el rol de un usuario
   Future<models.RolUsuario?> getRolUsuario(String uid) async {
     try {
@@ -93,16 +122,92 @@ class DatabaseService {
   /// Actualizar usuario
   Future<void> updateUsuario(String uid, Map<String, dynamic> updates) async {
     try {
-      await _usuariosRef.child(uid).update(updates);
+      print('DEBUG: Iniciando updateUsuario para $uid');
+      print('DEBUG: Updates recibidos: $updates');
 
-      // Actualizar también en el nodo específico según el rol
-      final rol = await getRolUsuario(uid);
-      if (rol == models.RolUsuario.CLIENTE) {
-        await _clientesRef.child(uid).update(updates);
-      } else if (rol == models.RolUsuario.TRABAJADOR || rol == models.RolUsuario.ADMIN) {
-        await _trabajadoresRef.child(uid).update(updates);
+      // 1. Obtener el rol actual antes de actualizar
+      final oldRole = await getRolUsuario(uid);
+      print('DEBUG: Rol actual en BD: $oldRole');
+      
+      // 2. Actualizar el nodo principal de usuarios
+      await _usuariosRef.child(uid).update(updates);
+      print('DEBUG: Nodo principal actualizado');
+
+      // 3. Determinar el nuevo rol
+      models.RolUsuario? newRole;
+      if (updates.containsKey('rol')) {
+        final rolVal = updates['rol'];
+        if (rolVal is String) {
+          newRole = models.RolUsuario.fromJson(rolVal);
+        } else {
+           newRole = models.RolUsuario.fromJson(rolVal.toString());
+        }
+      } else {
+        newRole = oldRole;
       }
+      print('DEBUG: Nuevo rol calculado: $newRole');
+
+      if (oldRole == null || newRole == null) {
+        print('DEBUG: Error determinando roles (old: $oldRole, new: $newRole)');
+        return;
+      }
+
+      // 4. Manejar cambio de nodo si el rol cambió
+      if (oldRole != newRole) {
+        print('DEBUG: Detectado cambio de rol de $oldRole a $newRole. Iniciando migración...');
+
+        // Obtener datos completos (ojo: obtenemos del nodo principal que YA fue actualizado en paso 2)
+        // Esto debería traer los datos "nuevos", pero por seguridad, mergeamos manualmente en memoria.
+        final userSnapshot = await _usuariosRef.child(uid).get();
+        if (!userSnapshot.exists) return;
+        
+        // Merge manual para asegurar consistencia
+        final currentData = Map<String, dynamic>.from(userSnapshot.value as Map);
+        final newData = Map<String, dynamic>.from(currentData);
+        newData.addAll(updates);
+        // Forzar el rol nuevo en el mapa para evitar inconsistencias
+        newData['rol'] = newRole.toJson();
+        
+        print('DEBUG: Datos para migración preparados: $newData');
+
+        // Definir referencias
+        DatabaseReference? oldNodeRef;
+        DatabaseReference? newNodeRef;
+
+        if (oldRole == models.RolUsuario.CLIENTE) {
+          oldNodeRef = _clientesRef.child(uid);
+        } else {
+          oldNodeRef = _trabajadoresRef.child(uid);
+        }
+
+        if (newRole == models.RolUsuario.CLIENTE) {
+          newNodeRef = _clientesRef.child(uid);
+        } else {
+          newNodeRef = _trabajadoresRef.child(uid);
+        }
+
+        print('DEBUG: Escribiendo en nuevo nodo: ${newNodeRef.path}');
+        // Ejecutar migración: Crear en nuevo, Borrar en viejo
+        await newNodeRef.set(newData);
+        print('DEBUG: Escritura en nuevo nodo exitosa');
+        
+        print('DEBUG: Borrando nodo antiguo: ${oldNodeRef.path}');
+        await oldNodeRef.remove();
+        print('DEBUG: Borrado de nodo antiguo exitoso');
+        
+      } else {
+        // Caso: Mismo Rol -> Solo actualizar el nodo correspondiente
+        print('DEBUG: El rol no cambió. Actualizando nodo específico...');
+        if (newRole == models.RolUsuario.CLIENTE) {
+          await _clientesRef.child(uid).update(updates);
+        } else {
+          await _trabajadoresRef.child(uid).update(updates);
+        }
+        print('DEBUG: Actualización de nodo específico exitosa');
+      }
+
     } catch (e) {
+      print('DEBUG: Error CRÍTICO en updateUsuario: $e');
       throw 'Error al actualizar usuario: ${e.toString()}';
     }
   }

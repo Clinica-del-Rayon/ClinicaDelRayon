@@ -8,8 +8,10 @@ Encapsula todas las interacciones con **Firebase Realtime Database**.
 
 ### Funcionalidades Principales:
 - **Usuarios**:
-  - `createCliente`, `createTrabajador`: Guarda en nodo `/usuarios` y nodos específicos (`/clientes`, `/trabajadores`) para optimizar lecturas.
-  - `getUsuario`: Recupera información y la instancia en la clase correcta (`Cliente` o `Trabajador`) según el rol almacenado.
+  - **`getAllUsuarios`**: **Fuente de Verdad Única**. Recupera todos los usuarios desde el nodo maestro `/usuarios`. Evita inconsistencias leyendo de listas parciales. Aplica deserialización polimórfica basada en el campo `rol`.
+  - **`updateUsuario`**: Actualiza datos de perfil. Incluye lógica de **Migración de Roles**: si un usuario cambia de rol (ej. Cliente -> Admin), el servicio mueve automáticamente sus datos específicos entre los nodos `/clientes` y `/trabajadores` y actualiza el nodo raíz.
+  - `createCliente`, `createTrabajador`: Creación inicial.
+  - `getUsuario`: Lectura individual.
 - **Vehículos**:
   - CRUD completo (`create`, `get`, `update`, `delete`).
   - `vehiculosByClienteStream`: Stream para escuchar cambios en vehículos de un cliente en tiempo real.
