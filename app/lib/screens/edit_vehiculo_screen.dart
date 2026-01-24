@@ -5,6 +5,7 @@ import '../services/database_service.dart';
 import '../services/storage_service.dart';
 import '../models/vehiculo.dart';
 import '../models/usuario.dart';
+import '../utils/vehiculo_validator.dart';
 
 class EditVehiculoScreen extends StatefulWidget {
   const EditVehiculoScreen({super.key});
@@ -273,12 +274,22 @@ class _EditVehiculoScreenState extends State<EditVehiculoScreen> {
               TextFormField(
                 controller: _placaController,
                 decoration: InputDecoration(
-                  labelText: 'Placa',
+                  labelText: VehiculoValidator.getPlacaLabel(_tipoVehiculo),
                   prefixIcon: Icon(Icons.pin),
                   border: OutlineInputBorder(),
+                  hintText: VehiculoValidator.getPlacaHint(_tipoVehiculo),
                 ),
                 textCapitalization: TextCapitalization.characters,
-                validator: (value) => value?.isEmpty ?? true ? 'Ingresa la placa' : null,
+                onChanged: (value) {
+                  // Auto-formatear mientras escribe
+                  if (value.length == 6 && !value.contains('-')) {
+                    _placaController.value = TextEditingValue(
+                      text: VehiculoValidator.formatPlaca(value, _tipoVehiculo),
+                      selection: TextSelection.collapsed(offset: 7),
+                    );
+                  }
+                },
+                validator: (value) => VehiculoValidator.validatePlaca(value, _tipoVehiculo),
               ),
               SizedBox(height: 16),
 

@@ -32,7 +32,7 @@ class _EditServicioScreenState extends State<EditServicioScreen> {
       text: widget.servicio.precioEstimado?.toStringAsFixed(2) ?? '',
     );
     _duracionEstimadaController = TextEditingController(
-      text: widget.servicio.duracionEstimada ?? '',
+      text: widget.servicio.duracionEstimada?.toString() ?? '',
     );
   }
 
@@ -61,7 +61,7 @@ class _EditServicioScreenState extends State<EditServicioScreen> {
             : double.tryParse(_precioEstimadoController.text.trim()),
         'duracion_estimada': _duracionEstimadaController.text.trim().isEmpty
             ? null
-            : _duracionEstimadaController.text.trim(),
+            : double.tryParse(_duracionEstimadaController.text.trim()),
       };
 
       await _dbService.updateServicio(widget.servicio.id, updates);
@@ -206,11 +206,25 @@ class _EditServicioScreenState extends State<EditServicioScreen> {
                 TextFormField(
                   controller: _duracionEstimadaController,
                   decoration: const InputDecoration(
-                    labelText: 'Duración Estimada (Opcional)',
+                    labelText: 'Duración Estimada en Horas (Opcional)',
+                    hintText: 'Ej: 2 (para 2 horas), 0.5 (para 30 min)',
                     prefixIcon: Icon(Icons.schedule),
                     border: OutlineInputBorder(),
+                    suffixText: 'hrs',
                   ),
-                  textCapitalization: TextCapitalization.sentences,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                  ],
+                  validator: (value) {
+                    if (value != null && value.trim().isNotEmpty) {
+                      final horas = double.tryParse(value.trim());
+                      if (horas == null || horas <= 0) {
+                        return 'Ingresa una duración válida mayor a 0';
+                      }
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 32),
 

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/database_service.dart';
 import '../services/storage_service.dart';
 import '../models/vehiculo.dart';
+import '../utils/vehiculo_validator.dart';
 
 class CreateVehiculoScreen extends StatefulWidget {
   final String clienteId;
@@ -102,11 +103,14 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
       // Crear vehículo en DB y obtener ID (esto ya valida placa duplicada)
       vehiculoId = await _dbService.createVehiculo(vehiculoTemp);
 
+      // Mostrar un solo diálogo de progreso
+      if (mounted) {
+        _mostrarProgreso('Subiendo ${_imagenesLocales.length} fotos...');
+      }
+
       // Subir fotos a Firebase Storage
       final List<String> fotosUrls = [];
       for (int i = 0; i < _imagenesLocales.length; i++) {
-        _mostrarProgreso('Subiendo foto ${i + 1} de ${_imagenesLocales.length}...');
-
         final url = await _storageService.uploadVehiclePhoto(
           vehiculoId,
           _imagenesLocales[i],
@@ -122,9 +126,9 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
 
       if (mounted) {
         Navigator.pop(context); // Cerrar loading
-        Navigator.pop(context); // Volver a lista de vehículos
+        Navigator.pop(context, true); // Volver a lista con resultado exitoso
 
-        // Mostrar mensaje de éxito con SnackBar
+        // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -132,12 +136,12 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
                 Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 12),
                 Expanded(
-                  child: Text('Vehículo registrado exitosamente con ${fotosUrls.length} fotos'),
+                  child: Text('Vehículo registrado exitosamente'),
                 ),
               ],
             ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -264,14 +268,22 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
               TextFormField(
                 controller: _placaController,
                 decoration: InputDecoration(
-                  labelText: 'Placa',
+                  labelText: VehiculoValidator.getPlacaLabel(_tipoVehiculo),
                   prefixIcon: Icon(Icons.pin),
                   border: OutlineInputBorder(),
-                  hintText: 'ABC123',
+                  hintText: VehiculoValidator.getPlacaHint(_tipoVehiculo),
                 ),
                 textCapitalization: TextCapitalization.characters,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Ingresa la placa' : null,
+                onChanged: (value) {
+                  // Auto-formatear mientras escribe
+                  if (value.length == 6 && !value.contains('-')) {
+                    _placaController.value = TextEditingValue(
+                      text: VehiculoValidator.formatPlaca(value, _tipoVehiculo),
+                      selection: TextSelection.collapsed(offset: 7),
+                    );
+                  }
+                },
+                validator: (value) => VehiculoValidator.validatePlaca(value, _tipoVehiculo),
               ),
               SizedBox(height: 16),
 

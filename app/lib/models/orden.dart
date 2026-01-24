@@ -64,7 +64,7 @@ class Servicio {
   final String nombre; // Ej: "Lavado", "Pulido", "Pintura"
   final String? descripcion; // Descripción del servicio
   final double? precioEstimado; // Precio estimado base
-  final String? duracionEstimada; // Duración estimada (ej: "2 horas", "1 día")
+  final double? duracionEstimada; // Duración estimada en horas
 
   Servicio({
     required this.id,
@@ -92,7 +92,7 @@ class Servicio {
       nombre: json['nombre'] as String? ?? '',
       descripcion: json['descripcion'] as String?,
       precioEstimado: (json['precio_estimado'] as num?)?.toDouble(),
-      duracionEstimada: json['duracion_estimada'] as String?,
+      duracionEstimada: (json['duracion_estimada'] as num?)?.toDouble(),
     );
   }
 
@@ -102,7 +102,7 @@ class Servicio {
     String? nombre,
     String? descripcion,
     double? precioEstimado,
-    String? duracionEstimada,
+    double? duracionEstimada,
   }) {
     return Servicio(
       id: id ?? this.id,

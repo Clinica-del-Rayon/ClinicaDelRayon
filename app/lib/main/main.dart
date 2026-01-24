@@ -30,6 +30,7 @@ import '../screens/cliente/cliente_reservas_screen.dart';
 import '../screens/cliente/cliente_editar_datos_screen.dart';
 import '../screens/cliente/cliente_vehiculos_screen.dart';
 import '../screens/cliente/cliente_ordenes_screen.dart';
+import '../screens/orden_details_screen.dart';
 
 import 'package:provider/provider.dart';
 import '../providers/provider_state.dart';
@@ -104,6 +105,16 @@ class MyApp extends StatelessWidget {
             builder: (context) => CreateVehiculoScreen(
               clienteId: args['clienteId'],
               clienteNombre: args['clienteNombre'],
+            ),
+          );
+        }
+        if (settings.name == '/orden-details') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => OrdenDetailsScreen(
+              ordenInicial: args['orden'],
+              cliente: args['cliente'],
+              vehiculo: args['vehiculo'],
             ),
           );
         }

@@ -52,11 +52,35 @@ class _ClienteEditarDatosScreenState extends State<ClienteEditarDatosScreen> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _imageFile = File(image.path);
-      });
+    final source = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Seleccionar foto'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.photo_library, color: _primaryColor),
+              title: Text('Galería'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: Icon(Icons.camera_alt, color: _primaryColor),
+              title: Text('Cámara'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source != null) {
+      final XFile? image = await _picker.pickImage(source: source);
+      if (image != null) {
+        setState(() {
+          _imageFile = File(image.path);
+        });
+      }
     }
   }
 
@@ -88,8 +112,8 @@ class _ClienteEditarDatosScreenState extends State<ClienteEditarDatosScreen> {
 
       await _dbService.updateUsuario(usuario.uid, updates);
 
-      // Reload user data
-      await provider.fetchAllUsers();
+      // Recargar datos del usuario actual en el provider para actualizar toda la app
+      await provider.refreshCurrentUser();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,7 +123,7 @@ class _ClienteEditarDatosScreenState extends State<ClienteEditarDatosScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true); // Volver con resultado exitoso
       }
     } catch (e) {
       if (mounted) {

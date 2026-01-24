@@ -314,7 +314,7 @@ class _ServiciosManagementScreenState extends State<ServiciosManagementScreen> {
                             Icon(Icons.schedule_rounded, size: 14, color: Colors.blueGrey[400]),
                             SizedBox(width: 4),
                             Text(
-                              servicio.duracionEstimada!,
+                              '${servicio.duracionEstimada!} ${servicio.duracionEstimada! == 1 ? 'hr' : 'hrs'}',
                               style: TextStyle(color: Colors.blueGrey[400], fontSize: 13),
                             ),
                           ],

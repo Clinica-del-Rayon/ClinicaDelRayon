@@ -67,12 +67,29 @@ class Vehiculo {
     // Manejar compatibilidad con el campo antiguo cliente_id
     List<String> clientes = [];
     if (json['cliente_ids'] != null) {
-      clientes = (json['cliente_ids'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ?? [];
+      // Manejar si viene como String en lugar de List
+      if (json['cliente_ids'] is String) {
+        clientes = [json['cliente_ids'] as String];
+      } else {
+        clientes = (json['cliente_ids'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ?? [];
+      }
     } else if (json['cliente_id'] != null) {
       // Compatibilidad con versión antigua
       clientes = [json['cliente_id'] as String];
+    }
+
+    // Manejar tipo_vehiculo en diferentes formatos
+    TipoVehiculo tipo = TipoVehiculo.CARRO;
+    if (json['tipo_vehiculo'] != null) {
+      if (json['tipo_vehiculo'] is String) {
+        tipo = TipoVehiculo.fromJson(json['tipo_vehiculo'] as String);
+      } else if (json['tipo_vehiculo'] is Map) {
+        // Si viene como Map, puede ser que tenga una propiedad 'name' o similar
+        final tipoMap = json['tipo_vehiculo'] as Map;
+        tipo = TipoVehiculo.fromJson(tipoMap['name']?.toString() ?? 'CARRO');
+      }
     }
 
     return Vehiculo(
@@ -83,9 +100,7 @@ class Vehiculo {
       generacion: json['generacion'] as int? ?? 0,
       color: json['color'] as String? ?? '',
       clienteIds: clientes,
-      tipoVehiculo: TipoVehiculo.fromJson(
-        json['tipo_vehiculo'] as String? ?? 'CARRO',
-      ),
+      tipoVehiculo: tipo,
       fotosUrls: (json['fotos_urls'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??

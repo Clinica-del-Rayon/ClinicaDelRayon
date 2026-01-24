@@ -1,15 +1,112 @@
 import 'package:flutter/material.dart';
 import '../models/vehiculo.dart';
 import '../models/usuario.dart';
+import '../services/database_service.dart';
 
-class VehiculoDetailsScreen extends StatelessWidget {
+class VehiculoDetailsScreen extends StatefulWidget {
   const VehiculoDetailsScreen({super.key});
 
   @override
+  State<VehiculoDetailsScreen> createState() => _VehiculoDetailsScreenState();
+}
+
+class _VehiculoDetailsScreenState extends State<VehiculoDetailsScreen> {
+  final DatabaseService _dbService = DatabaseService();
+
+  Vehiculo? _vehiculo;
+  Map<String, Cliente> _clientesMap = {};
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadVehiculoData();
+  }
+
+  Future<void> _loadVehiculoData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      // Obtener el ID del vehículo de los argumentos
+      final vehiculoId = ModalRoute.of(context)!.settings.arguments as String;
+
+      // Cargar el vehículo
+      final vehiculo = await _dbService.getVehiculo(vehiculoId);
+
+      if (vehiculo == null) {
+        throw 'Vehículo no encontrado';
+      }
+
+      // Cargar los clientes asociados
+      final clientesMap = <String, Cliente>{};
+      for (final clienteId in vehiculo.clienteIds) {
+        final usuario = await _dbService.getUsuario(clienteId);
+        if (usuario != null && usuario is Cliente) {
+          clientesMap[clienteId] = usuario;
+        }
+      }
+
+      setState(() {
+        _vehiculo = vehiculo;
+        _clientesMap = clientesMap;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final Vehiculo vehiculo = args['vehiculo'];
-    final Map<String, Cliente> clientesMap = args['clientes'];
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Detalles del Vehículo'),
+          backgroundColor: Colors.blue,
+        ),
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_error != null || _vehiculo == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Error'),
+          backgroundColor: Colors.red,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.red),
+              SizedBox(height: 16),
+              Text(
+                _error ?? 'Vehículo no encontrado',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Volver'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final vehiculo = _vehiculo!;
+    final clientesMap = _clientesMap;
 
     final tipoIcon = vehiculo.tipoVehiculo == TipoVehiculo.CARRO
         ? Icons.directions_car

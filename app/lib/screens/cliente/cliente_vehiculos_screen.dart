@@ -52,8 +52,29 @@ class _ClienteVehiculosScreenState extends State<ClienteVehiculosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final usuario = Provider.of<ProviderState>(context).currentUserData as Cliente;
+
     return Scaffold(
       backgroundColor: _backgroundColor,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.pushNamed(
+            context,
+            '/create-vehiculo',
+            arguments: {
+              'clienteId': usuario.uid,
+              'clienteNombre': '${usuario.nombres} ${usuario.apellidos}',
+            },
+          );
+          // Recargar si se creó exitosamente
+          if (result == true) {
+            _loadVehiculos();
+          }
+        },
+        backgroundColor: _primaryColor,
+        icon: Icon(Icons.add),
+        label: Text('Nuevo Vehículo'),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -164,12 +185,14 @@ class _ClienteVehiculosScreenState extends State<ClienteVehiculosScreen> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
-          onTap: () {
-            Navigator.pushNamed(
+          onTap: () async {
+            await Navigator.pushNamed(
               context,
               '/vehiculo-details',
               arguments: vehiculo.id,
             );
+            // Recargar después de ver detalles (por si se editó)
+            _loadVehiculos();
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(

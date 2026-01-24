@@ -274,15 +274,14 @@ class _VehiculosManagementScreenState extends State<VehiculosManagementScreen> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
-          onTap: () {
-            Navigator.pushNamed(
+          onTap: () async {
+            await Navigator.pushNamed(
               context,
               '/vehiculo-details',
-              arguments: {
-                'vehiculo': vehiculo,
-                'clientes': _clientesMap,
-              },
+              arguments: vehiculo.id,
             );
+            // Recargar después de ver detalles (por si se editó)
+            _loadData();
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(

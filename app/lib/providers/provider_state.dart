@@ -67,6 +67,17 @@ class ProviderState extends ChangeNotifier {
     }
   }
 
+  /// Refrescar datos del usuario actual
+  Future<void> refreshCurrentUser() async {
+    try {
+      _currentUserData = await _authService.getCurrentUserData();
+      _currentUserRole = await _authService.getCurrentUserRole();
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error refreshing current user: $e");
+    }
+  }
+
   Future<void> signIn(String email, String password) async {
     _isLoading = true;
     notifyListeners();

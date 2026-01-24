@@ -51,7 +51,7 @@ class _CreateServicioScreenState extends State<CreateServicioScreen> {
             : double.tryParse(_precioEstimadoController.text.trim()),
         duracionEstimada: _duracionEstimadaController.text.trim().isEmpty
             ? null
-            : _duracionEstimadaController.text.trim(),
+            : double.tryParse(_duracionEstimadaController.text.trim()),
       );
 
       await _dbService.createServicio(servicio);

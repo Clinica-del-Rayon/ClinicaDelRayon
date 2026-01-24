@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/database_service.dart';
 import '../services/storage_service.dart';
 import '../models/vehiculo.dart';
+import '../utils/vehiculo_validator.dart';
 
 class CreateVehiculoMultiScreen extends StatefulWidget {
   const CreateVehiculoMultiScreen({super.key});

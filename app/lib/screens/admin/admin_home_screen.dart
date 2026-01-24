@@ -46,6 +46,7 @@ class AdminHomeScreen extends StatelessWidget {
                 children: [
                   // Large Avatar
                   CircleAvatar(
+                    key: ValueKey(usuario.fotoPerfil ?? 'no-photo'), // Fuerza actualización
                     radius: 35,
                     backgroundColor: Colors.grey[200],
                     backgroundImage: usuario.fotoPerfil != null 
@@ -114,6 +115,7 @@ class AdminHomeScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 20,
                   mainAxisSpacing: 20,
+                  childAspectRatio: 1.0, // Ajustado para dar más altura
                   children: [
                     _buildAdminCard(
                       context,
@@ -185,40 +187,47 @@ class AdminHomeScreen extends StatelessWidget {
           onTap: () => Navigator.pushNamed(context, route),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(icon, size: 32, color: color),
+                  child: Icon(icon, size: 28, color: color),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blueGrey[800],
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey[800],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.blueGrey[400],
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blueGrey[400],
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

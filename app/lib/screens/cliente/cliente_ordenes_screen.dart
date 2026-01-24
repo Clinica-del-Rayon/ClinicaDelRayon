@@ -199,12 +199,21 @@ class _ClienteOrdenesScreenState extends State<ClienteOrdenesScreen> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
-          onTap: () {
-            Navigator.pushNamed(
+          onTap: () async {
+            // Cargar datos completos antes de navegar
+            final vehiculo = await _dbService.getVehiculo(orden.vehiculoId);
+            final usuario = Provider.of<ProviderState>(context, listen: false).currentUserData as Cliente;
+
+            await Navigator.pushNamed(
               context,
               '/orden-details',
-              arguments: orden.id,
+              arguments: {
+                'orden': orden,
+                'cliente': usuario,
+                'vehiculo': vehiculo,
+              },
             );
+            _loadOrdenes(); // Recargar después de ver detalles
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(

@@ -81,7 +81,7 @@ class ServicioDetailsScreen extends StatelessWidget {
               _buildInfoCard(
                 icon: Icons.schedule,
                 title: 'Duración Estimada',
-                content: servicio.duracionEstimada!,
+                content: '${servicio.duracionEstimada!} ${servicio.duracionEstimada! == 1 ? 'hora' : 'horas'}',
                 color: Colors.orange,
               ),
 
