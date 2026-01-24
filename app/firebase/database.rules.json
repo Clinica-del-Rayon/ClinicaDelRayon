@@ -1,0 +1,45 @@
+{
+  "rules": {
+    "usuarios": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && (auth.uid == $uid || root.child('usuarios').child(auth.uid).child('rol').val() == 'ADMIN')"
+      }
+    },
+    "clientes": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && (auth.uid == $uid || root.child('usuarios').child(auth.uid).child('rol').val() == 'ADMIN')"
+      }
+    },
+    "trabajadores": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && (auth.uid == $uid || root.child('usuarios').child(auth.uid).child('rol').val() == 'ADMIN')"
+      }
+    },
+    "vehiculos": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "placa",
+        ".value",
+        "cliente_id"
+      ]
+    },
+    "servicios": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('usuarios').child(auth.uid).child('rol').val() == 'ADMIN'"
+    },
+    "ordenes": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "cliente_id",
+        "vehiculo_id",
+        "estado",
+        "fecha_creacion"
+      ]
+    }
+  }
+}

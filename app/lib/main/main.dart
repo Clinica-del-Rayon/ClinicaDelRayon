@@ -26,6 +26,10 @@ import '../screens/create_orden_screen.dart';
 import '../screens/edit_vehiculo_screen.dart';
 import '../screens/select_clientes_vehiculo_screen.dart';
 import '../screens/create_vehiculo_multi_screen.dart';
+import '../screens/cliente/cliente_reservas_screen.dart';
+import '../screens/cliente/cliente_editar_datos_screen.dart';
+import '../screens/cliente/cliente_vehiculos_screen.dart';
+import '../screens/cliente/cliente_ordenes_screen.dart';
 
 import 'package:provider/provider.dart';
 import '../providers/provider_state.dart';
@@ -78,6 +82,10 @@ class MyApp extends StatelessWidget {
         '/create-servicio': (context) => const CreateServicioScreen(),
         '/ordenes-management': (context) => const OrdenesManagementScreen(),
         '/create-orden': (context) => const CreateOrdenScreen(),
+        '/cliente-reservas': (context) => const ClienteReservasScreen(),
+        '/cliente-editar-datos': (context) => const ClienteEditarDatosScreen(),
+        '/cliente-vehiculos': (context) => const ClienteVehiculosScreen(),
+        '/cliente-ordenes': (context) => const ClienteOrdenesScreen(),
       },
       onGenerateRoute: (settings) {
         // Rutas con parámetros
