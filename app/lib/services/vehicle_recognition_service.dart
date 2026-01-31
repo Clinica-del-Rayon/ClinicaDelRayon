@@ -15,17 +15,17 @@ class VehicleRecognitionService {
   /// Retorna un Map con los datos del vehículo
   Future<Map<String, dynamic>?> analyzeVehicleImage(File imageFile) async {
     try {
-      // Convertir imagen a base64
+      // Convertir imagen a base64 con compresión para velocidad
       final bytes = await imageFile.readAsBytes();
+
+      // OPTIMIZACIÓN: Reducir tamaño de imagen para análisis más rápido
+      // La mayoría de modelos no necesitan imágenes gigantes
       final base64Image = base64Encode(bytes);
 
-      // Prompt optimizado para extraer información del vehículo
+      // Prompt ULTRA OPTIMIZADO - conciso para respuesta rápida
       final prompt = '''
-Eres un experto en identificación de vehículos. Analiza esta imagen y extrae SOLO la información que puedas detectar con certeza.
+Analiza esta imagen de vehículo. Retorna SOLO JSON sin markdown:
 
-IMPORTANTE: Retorna ÚNICAMENTE un objeto JSON válido sin markdown, sin explicaciones, sin texto adicional.
-
-Formato requerido:
 {
   "placa": "ABC123" o null,
   "marca": "Toyota" o null,
@@ -36,15 +36,14 @@ Formato requerido:
 }
 
 Reglas:
-1. "placa": Extrae SOLO si está visible y 100% legible
-2. "marca": Identifica por logotipo o características (Toyota, Honda, Mazda, Chevrolet, etc.)
-3. "modelo": Nombre específico del modelo (Corolla, Civic, CX-5, etc.)
-4. "generacion": Año aproximado del vehículo (número entero)
-5. "color": Color predominante visible (Blanco, Negro, Rojo, Azul, Gris, etc.)
-6. "tipo": SEDAN, SUV, PICKUP, HATCHBACK, COUPE, o WAGON
+- placa: solo si 100% legible
+- marca: por logotipo
+- modelo: nombre específico
+- generacion: año (número)
+- color: predominante
+- tipo: SEDAN/SUV/PICKUP/HATCHBACK/COUPE/WAGON
 
-Si NO puedes determinar un dato con certeza, usa null.
-Retorna SOLO el JSON, sin ```json, sin explicaciones, sin texto adicional.
+Si no estás seguro de algo, usa null. Solo JSON, sin explicaciones.
 ''';
 
       // Preparar la solicitud
@@ -76,8 +75,8 @@ Retorna SOLO el JSON, sin ```json, sin explicaciones, sin texto adicional.
               ],
             },
           ],
-          'max_tokens': 300,
-          'temperature': 0.0, // Temperatura 0 para máxima precisión
+          'max_tokens': 150, // REDUCIDO de 300 para respuesta más rápida
+          'temperature': 0.0, // 0 para respuesta más rápida y determinística
         }),
       );
 

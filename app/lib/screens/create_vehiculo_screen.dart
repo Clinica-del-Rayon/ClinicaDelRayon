@@ -85,7 +85,31 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
     );
 
     if (result != null) {
-      _llenarCamposConDatosIA(result);
+      print('Resultado de IA recibido: $result'); // Debug
+
+      // Extraer datos del vehículo
+      final vehicleData = result['vehicleData'] as Map<String, dynamic>?;
+      // Extraer fotos - cast correcto
+      final imagesList = result['images'];
+
+      if (vehicleData != null) {
+        _llenarCamposConDatosIA(vehicleData);
+      }
+
+      // Agregar las fotos usadas en el escaneo a las fotos del vehículo
+      if (imagesList != null && imagesList is List) {
+        setState(() {
+          // Convertir File a XFile y agregar
+          for (var file in imagesList) {
+            if (file is File) {
+              _imagenesLocales.add(XFile(file.path));
+              print('Foto agregada: ${file.path}'); // Debug
+            }
+          }
+        });
+
+        print('Total de fotos después de IA: ${_imagenesLocales.length}'); // Debug
+      }
     }
   }
 
@@ -158,9 +182,14 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
   Future<void> _crearVehiculo() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validar mínimo 3 fotos
+    // Validar rango de fotos: mínimo 3, máximo 10
     if (_imagenesLocales.length < 3) {
       _mostrarError('Debes agregar mínimo 3 fotos del vehículo');
+      return;
+    }
+
+    if (_imagenesLocales.length > 10) {
+      _mostrarError('Máximo 10 fotos permitidas. Por favor elimina ${_imagenesLocales.length - 10} foto(s)');
       return;
     }
 

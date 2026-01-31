@@ -24,6 +24,12 @@ class _AIVehicleScanDialogState extends State<AIVehicleScanDialog> {
   String _statusMessage = '';
 
   Future<void> _takePhoto() async {
+    // Verificar límite de 10 fotos
+    if (_selectedImages.length >= 10) {
+      _showError('Máximo 10 fotos permitidas');
+      return;
+    }
+
     try {
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
@@ -41,15 +47,29 @@ class _AIVehicleScanDialogState extends State<AIVehicleScanDialog> {
   }
 
   Future<void> _pickFromGallery() async {
+    // Verificar cuántas fotos más se pueden agregar
+    final fotosRestantes = 10 - _selectedImages.length;
+    if (fotosRestantes <= 0) {
+      _showError('Máximo 10 fotos permitidas');
+      return;
+    }
+
     try {
       final List<XFile> images = await _picker.pickMultiImage(
         imageQuality: 85,
       );
 
       if (images.isNotEmpty) {
+        // Solo agregar hasta el límite de 10
+        final imagesToAdd = images.take(fotosRestantes).toList();
+
         setState(() {
-          _selectedImages.addAll(images.map((xFile) => File(xFile.path)));
+          _selectedImages.addAll(imagesToAdd.map((xFile) => File(xFile.path)));
         });
+
+        if (images.length > fotosRestantes) {
+          _showError('Solo se agregaron $fotosRestantes fotos (límite: 10 fotos)');
+        }
       }
     } catch (e) {
       _showError('Error al seleccionar imágenes: ${e.toString()}');
@@ -84,8 +104,12 @@ class _AIVehicleScanDialogState extends State<AIVehicleScanDialog> {
 
       if (vehicleData != null) {
         if (mounted) {
-          // Primero cerrar el diálogo y retornar los datos
-          Navigator.pop(context, vehicleData);
+          // Retornar datos Y las fotos seleccionadas
+          final result = {
+            'vehicleData': vehicleData,
+            'images': _selectedImages,
+          };
+          Navigator.pop(context, result);
 
           // Luego mostrar el snackbar en el contexto padre
           Future.delayed(Duration(milliseconds: 100), () {
