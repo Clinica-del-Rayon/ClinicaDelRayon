@@ -115,12 +115,12 @@ class AdminHomeScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 20,
                   mainAxisSpacing: 20,
-                  childAspectRatio: 1.0, // Ajustado para dar más altura
+                  childAspectRatio: 1.0,
                   children: [
                     _buildAdminCard(
                       context,
                       title: 'Usuarios',
-                      subtitle: 'Todos los usuarios', // Shortened for minimalist look
+                      subtitle: 'Todos los usuarios',
                       icon: Icons.people_outline_rounded,
                       color: primaryBlue,
                       route: '/usuarios-management',
@@ -148,6 +148,22 @@ class AdminHomeScreen extends StatelessWidget {
                       icon: Icons.assignment_outlined,
                       color: Colors.purple[600]!,
                       route: '/ordenes-management',
+                    ),
+                    _buildAdminCard(
+                      context,
+                      title: 'Solicitudes',
+                      subtitle: 'Gestionar solicitudes',
+                      icon: Icons.schedule_send_rounded,
+                      color: Colors.pink[600]!,
+                      route: '/solicitudes-management',
+                    ),
+                    _buildAdminCard(
+                      context,
+                      title: 'Estadísticas',
+                      subtitle: 'Reportes y métricas',
+                      icon: Icons.bar_chart_rounded,
+                      color: Colors.green[700]!,
+                      route: '/estadisticas',
                     ),
                   ],
                 ),

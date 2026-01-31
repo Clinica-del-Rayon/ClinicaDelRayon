@@ -6,73 +6,124 @@ class SelectAccountTypeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color primaryColor = const Color(0xFF1E88E5);
+    final Color backgroundColor = const Color(0xFFF5F7FA);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Crear Usuario'),
-        backgroundColor: Colors.red,
-      ),
+      backgroundColor: backgroundColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(
-                Icons.person_add,
-                size: 80,
-                color: Colors.red,
+        child: Column(
+          children: [
+            // Custom AppBar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 24, 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.arrow_back_ios_new, color: Colors.blueGrey[700], size: 20),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Crear Usuario',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blueGrey[800],
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              const Text(
-                '¿Qué tipo de cuenta deseas crear?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+            ),
+
+            // Contenido
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(height: 20),
+
+                    // Ícono decorativo
+                    Center(
+                      child: Container(
+                        padding: EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Icon(
+                          Icons.person_add_rounded,
+                          size: 60,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 32),
+
+                    Text(
+                      '¿Qué tipo de cuenta\ndeseas crear?',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueGrey[800],
+                        height: 1.2,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Selecciona el rol del nuevo usuario',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    SizedBox(height: 48),
+
+                    // Tarjetas de selección
+                    _buildModernAccountCard(
+                      context,
+                      icon: Icons.person_outline_rounded,
+                      title: 'Cliente',
+                      subtitle: 'Usuario que solicita servicios',
+                      color: Colors.blue[600]!,
+                      rol: RolUsuario.CLIENTE,
+                    ),
+                    SizedBox(height: 16),
+
+                    _buildModernAccountCard(
+                      context,
+                      icon: Icons.engineering_outlined,
+                      title: 'Trabajador',
+                      subtitle: 'Mecánico, técnico o pintor',
+                      color: Colors.orange[600]!,
+                      rol: RolUsuario.TRABAJADOR,
+                    ),
+                    SizedBox(height: 16),
+
+                    _buildModernAccountCard(
+                      context,
+                      icon: Icons.admin_panel_settings_outlined,
+                      title: 'Administrador',
+                      subtitle: 'Control total del sistema',
+                      color: Colors.red[600]!,
+                      rol: RolUsuario.ADMIN,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 48),
-
-              // Botón Cliente
-              _buildAccountTypeButton(
-                context,
-                icon: Icons.person,
-                title: 'Cliente',
-                subtitle: 'Usuario que solicita servicios',
-                color: Colors.blue,
-                rol: RolUsuario.CLIENTE,
-              ),
-              const SizedBox(height: 16),
-
-              // Botón Trabajador
-              _buildAccountTypeButton(
-                context,
-                icon: Icons.engineering,
-                title: 'Trabajador',
-                subtitle: 'Mecánico, pintor, etc.',
-                color: Colors.orange,
-                rol: RolUsuario.TRABAJADOR,
-              ),
-              const SizedBox(height: 16),
-
-              // Botón Admin
-              _buildAccountTypeButton(
-                context,
-                icon: Icons.admin_panel_settings,
-                title: 'Administrador',
-                subtitle: 'Control total del sistema',
-                color: Colors.red,
-                rol: RolUsuario.ADMIN,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildAccountTypeButton(
+  Widget _buildModernAccountCard(
     BuildContext context, {
     required IconData icon,
     required String title,
@@ -80,60 +131,83 @@ class SelectAccountTypeScreen extends StatelessWidget {
     required Color color,
     required RolUsuario rol,
   }) {
-    return ElevatedButton(
-      onPressed: () {
-        // Navegar a la pantalla de creación correspondiente
-        String route;
-        switch (rol) {
-          case RolUsuario.CLIENTE:
-            route = '/create-cliente';
-            break;
-          case RolUsuario.TRABAJADOR:
-            route = '/create-trabajador';
-            break;
-          case RolUsuario.ADMIN:
-            route = '/create-admin';
-            break;
-        }
-
-        Navigator.pushNamed(context, route);
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: const EdgeInsets.all(20),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
-        children: [
-          Icon(icon, size: 40, color: Colors.white),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: () {
+            String route;
+            switch (rol) {
+              case RolUsuario.CLIENTE:
+                route = '/create-cliente';
+                break;
+              case RolUsuario.TRABAJADOR:
+                route = '/create-trabajador';
+                break;
+              case RolUsuario.ADMIN:
+                route = '/create-admin';
+                break;
+            }
+            Navigator.pushNamed(context, route);
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, size: 32, color: color),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey[800],
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.grey[400],
+                  size: 18,
                 ),
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_ios, color: Colors.white),
-        ],
+        ),
       ),
     );
   }

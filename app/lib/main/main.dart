@@ -31,16 +31,24 @@ import '../screens/cliente/cliente_editar_datos_screen.dart';
 import '../screens/cliente/cliente_vehiculos_screen.dart';
 import '../screens/cliente/cliente_ordenes_screen.dart';
 import '../screens/orden_details_screen.dart';
+import '../screens/admin/estadisticas_screen.dart';
+import '../screens/admin/solicitudes_management_screen.dart';
+import '../screens/cliente/cliente_solicitudes_screen.dart';
+import '../screens/cliente/create_solicitud_screen.dart';
 
 import 'package:provider/provider.dart';
 import '../providers/provider_state.dart';
+import '../providers/solicitudes_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ProviderState(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ProviderState()),
+        ChangeNotifierProvider(create: (context) => SolicitudesProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -83,13 +91,24 @@ class MyApp extends StatelessWidget {
         '/create-servicio': (context) => const CreateServicioScreen(),
         '/ordenes-management': (context) => const OrdenesManagementScreen(),
         '/create-orden': (context) => const CreateOrdenScreen(),
-        '/cliente-reservas': (context) => const ClienteReservasScreen(),
         '/cliente-editar-datos': (context) => const ClienteEditarDatosScreen(),
         '/cliente-vehiculos': (context) => const ClienteVehiculosScreen(),
         '/cliente-ordenes': (context) => const ClienteOrdenesScreen(),
+        '/estadisticas': (context) => const EstadisticasScreen(),
+        '/solicitudes-management': (context) => const SolicitudesManagementScreen(),
       },
       onGenerateRoute: (settings) {
         // Rutas con parámetros
+        if (settings.name == '/cliente-solicitudes') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          if (args != null && args['cliente'] != null) {
+            return MaterialPageRoute(
+              builder: (context) => ClienteSolicitudesScreen(
+                cliente: args['cliente'],
+              ),
+            );
+          }
+        }
         if (settings.name == '/vehiculos-cliente') {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(

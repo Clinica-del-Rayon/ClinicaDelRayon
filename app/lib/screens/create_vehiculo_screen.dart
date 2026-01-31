@@ -5,6 +5,7 @@ import '../services/database_service.dart';
 import '../services/storage_service.dart';
 import '../models/vehiculo.dart';
 import '../utils/vehiculo_validator.dart';
+import '../widgets/ai_vehicle_scan_dialog.dart';
 
 class CreateVehiculoScreen extends StatefulWidget {
   final String clienteId;
@@ -74,6 +75,84 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
     setState(() {
       _imagenesLocales.removeAt(index);
     });
+  }
+
+  Future<void> _escanearConIA() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AIVehicleScanDialog(),
+    );
+
+    if (result != null) {
+      _llenarCamposConDatosIA(result);
+    }
+  }
+
+  void _llenarCamposConDatosIA(Map<String, dynamic> data) {
+    setState(() {
+      // Solo llenar los campos que la IA pudo detectar (que no sean null o vacíos)
+      if (data['placa'] != null && data['placa'].toString().isNotEmpty) {
+        _placaController.text = data['placa'];
+      }
+      if (data['marca'] != null && data['marca'].toString().isNotEmpty) {
+        _marcaController.text = data['marca'];
+      }
+      if (data['modelo'] != null && data['modelo'].toString().isNotEmpty) {
+        _modeloController.text = data['modelo'];
+      }
+      if (data['generacion'] != null) {
+        _generacionController.text = data['generacion'].toString();
+      }
+      if (data['color'] != null && data['color'].toString().isNotEmpty) {
+        _colorController.text = data['color'];
+      }
+      if (data['tipo'] != null && data['tipo'].toString().isNotEmpty) {
+        final tipo = data['tipo'].toString().toUpperCase();
+        _tipoVehiculo = (tipo == 'MOTO' || tipo == 'MOTORCYCLE')
+            ? TipoVehiculo.MOTO
+            : TipoVehiculo.CARRO;
+      }
+    });
+
+    // Mostrar mensaje indicando qué campos se llenaron
+    final camposLlenados = <String>[];
+    if (data['placa'] != null && data['placa'].toString().isNotEmpty) {
+      camposLlenados.add('Placa');
+    }
+    if (data['marca'] != null && data['marca'].toString().isNotEmpty) {
+      camposLlenados.add('Marca');
+    }
+    if (data['modelo'] != null && data['modelo'].toString().isNotEmpty) {
+      camposLlenados.add('Modelo');
+    }
+    if (data['generacion'] != null) camposLlenados.add('Año');
+    if (data['color'] != null && data['color'].toString().isNotEmpty) {
+      camposLlenados.add('Color');
+    }
+    if (data['tipo'] != null && data['tipo'].toString().isNotEmpty) {
+      camposLlenados.add('Tipo');
+    }
+
+    if (camposLlenados.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo detectar ningún dato. Completa manualmente.'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 4),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Campos detectados: ${camposLlenados.join(", ")}. ${camposLlenados.length < 6 ? "Completa los demás manualmente." : "Verifica los datos."}',
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 5),
+        ),
+      );
+    }
   }
 
   Future<void> _crearVehiculo() async {
@@ -228,6 +307,81 @@ class _CreateVehiculoScreenState extends State<CreateVehiculoScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+
+              // Botón de escaneo con IA
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.purple[400]!, Colors.blue[400]!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.purple.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _isLoading ? null : _escanearConIA,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.auto_awesome,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Escanear con IA',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Detectar automáticamente los datos del vehículo',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

@@ -40,6 +40,15 @@
         "estado",
         "fecha_creacion"
       ]
+    },
+    "solicitudes": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "cliente_id",
+        "estado",
+        "fecha_creacion"
+      ]
     }
   }
 }

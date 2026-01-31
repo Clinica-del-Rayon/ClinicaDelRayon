@@ -119,11 +119,11 @@ class ClienteHomeScreen extends StatelessWidget {
                   children: [
                     _buildClientCard(
                       context,
-                      title: 'Reservas',
-                      subtitle: 'Nueva reserva',
-                      icon: Icons.event_available_rounded,
+                      title: 'Solicitudes',
+                      subtitle: 'Nueva solicitud',
+                      icon: Icons.schedule_send_rounded,
                       color: primaryBlue,
-                      route: '/cliente-reservas',
+                      route: '/cliente-solicitudes',
                     ),
                     _buildClientCard(
                       context,
@@ -184,7 +184,17 @@ class ClienteHomeScreen extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
-          onTap: () => Navigator.pushNamed(context, route),
+          onTap: () {
+            if (route == '/cliente-solicitudes') {
+              Navigator.pushNamed(
+                context,
+                route,
+                arguments: {'cliente': usuario},
+              );
+            } else {
+              Navigator.pushNamed(context, route);
+            }
+          },
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(16.0),

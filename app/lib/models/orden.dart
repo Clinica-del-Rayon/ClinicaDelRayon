@@ -63,14 +63,16 @@ class Servicio {
   final String id; // ID único del servicio
   final String nombre; // Ej: "Lavado", "Pulido", "Pintura"
   final String? descripcion; // Descripción del servicio
-  final double? precioEstimado; // Precio estimado base
-  final double? duracionEstimada; // Duración estimada en horas
+  final double? precioEstimado; // Precio estimado base (precio de venta)
+  final double? costoEstimado; // Costo estimado del servicio
+  final int? duracionEstimada; // Duración estimada en horas (entero)
 
   Servicio({
     required this.id,
     required this.nombre,
     this.descripcion,
     this.precioEstimado,
+    this.costoEstimado,
     this.duracionEstimada,
   });
 
@@ -81,6 +83,7 @@ class Servicio {
       'nombre': nombre,
       'descripcion': descripcion,
       'precio_estimado': precioEstimado,
+      'costo_estimado': costoEstimado,
       'duracion_estimada': duracionEstimada,
     };
   }
@@ -92,7 +95,8 @@ class Servicio {
       nombre: json['nombre'] as String? ?? '',
       descripcion: json['descripcion'] as String?,
       precioEstimado: (json['precio_estimado'] as num?)?.toDouble(),
-      duracionEstimada: (json['duracion_estimada'] as num?)?.toDouble(),
+      costoEstimado: (json['costo_estimado'] as num?)?.toDouble(),
+      duracionEstimada: (json['duracion_estimada'] as num?)?.toInt(),
     );
   }
 
@@ -102,13 +106,15 @@ class Servicio {
     String? nombre,
     String? descripcion,
     double? precioEstimado,
-    double? duracionEstimada,
+    double? costoEstimado,
+    int? duracionEstimada,
   }) {
     return Servicio(
       id: id ?? this.id,
       nombre: nombre ?? this.nombre,
       descripcion: descripcion ?? this.descripcion,
       precioEstimado: precioEstimado ?? this.precioEstimado,
+      costoEstimado: costoEstimado ?? this.costoEstimado,
       duracionEstimada: duracionEstimada ?? this.duracionEstimada,
     );
   }
@@ -264,6 +270,7 @@ class Orden {
   final DateTime? fechaPromesa; // Fecha prometida de entrega
   final EstadoOrden estado; // Estado general de la orden
   final List<DetalleOrden> detalles; // Lista de servicios (detalles)
+  final List<String> trabajadoresAsignados; // UIDs de trabajadores asignados
   final double? total; // Total de la orden (suma de todos los detalles)
 
   Orden({
@@ -274,6 +281,7 @@ class Orden {
     this.fechaPromesa,
     this.estado = EstadoOrden.EN_COTIZACION,
     this.detalles = const [],
+    this.trabajadoresAsignados = const [],
     this.total,
   });
 
@@ -287,6 +295,7 @@ class Orden {
       'fecha_promesa': fechaPromesa?.toIso8601String(),
       'estado': estado.toJson(),
       'detalles': detalles.map((d) => d.toJson()).toList(),
+      'trabajadores_asignados': trabajadoresAsignados,
       'total': total ?? calcularTotal(),
     };
   }
@@ -308,6 +317,10 @@ class Orden {
               ?.map((d) => DetalleOrden.fromJson(d as Map<dynamic, dynamic>))
               .toList() ??
           [],
+      trabajadoresAsignados: (json['trabajadores_asignados'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       total: (json['total'] as num?)?.toDouble(),
     );
   }
@@ -321,6 +334,7 @@ class Orden {
     DateTime? fechaPromesa,
     EstadoOrden? estado,
     List<DetalleOrden>? detalles,
+    List<String>? trabajadoresAsignados,
     double? total,
   }) {
     return Orden(
@@ -331,6 +345,7 @@ class Orden {
       fechaPromesa: fechaPromesa ?? this.fechaPromesa,
       estado: estado ?? this.estado,
       detalles: detalles ?? this.detalles,
+      trabajadoresAsignados: trabajadoresAsignados ?? this.trabajadoresAsignados,
       total: total ?? this.total,
     );
   }

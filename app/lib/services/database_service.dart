@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import '../models/usuario.dart' as models;
 import '../models/vehiculo.dart';
 import '../models/orden.dart';
+import '../models/solicitud.dart';
 
 class DatabaseService {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
@@ -13,6 +14,7 @@ class DatabaseService {
   DatabaseReference get _vehiculosRef => _database.child('vehiculos');
   DatabaseReference get _serviciosRef => _database.child('servicios');
   DatabaseReference get _ordenesRef => _database.child('ordenes');
+  DatabaseReference get _solicitudesRef => _database.child('solicitudes');
 
   /// Crear un nuevo cliente en la base de datos
   Future<void> createCliente(models.Cliente cliente) async {
@@ -703,5 +705,152 @@ class DatabaseService {
       throw 'Error al eliminar orden: ${e.toString()}';
     }
   }
-}
 
+  // ==================== MÉTODOS DE SOLICITUDES ====================
+
+  /// Crear una nueva solicitud
+  Future<void> createSolicitud(Solicitud solicitud) async {
+    try {
+      await _solicitudesRef.child(solicitud.id).set(solicitud.toJson());
+    } catch (e) {
+      throw 'Error al crear solicitud: ${e.toString()}';
+    }
+  }
+
+  /// Obtener solicitud por ID
+  Future<Solicitud?> getSolicitud(String id) async {
+    try {
+      final snapshot = await _solicitudesRef.child(id).get();
+      if (!snapshot.exists) return null;
+      return Solicitud.fromJson(snapshot.value as Map<dynamic, dynamic>);
+    } catch (e) {
+      throw 'Error al obtener solicitud: ${e.toString()}';
+    }
+  }
+
+  /// Obtener todas las solicitudes
+  Future<List<Solicitud>> getAllSolicitudes() async {
+    try {
+      final snapshot = await _solicitudesRef.get();
+      if (!snapshot.exists) return [];
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data.values
+          .map((s) => Solicitud.fromJson(s as Map<dynamic, dynamic>))
+          .toList();
+    } catch (e) {
+      throw 'Error al obtener solicitudes: ${e.toString()}';
+    }
+  }
+
+  /// Stream de todas las solicitudes
+  Stream<List<Solicitud>> getSolicitudesStream() {
+    return _solicitudesRef.onValue.map((event) {
+      if (!event.snapshot.exists) return [];
+      final data = event.snapshot.value as Map<dynamic, dynamic>;
+      return data.values
+          .map((s) => Solicitud.fromJson(s as Map<dynamic, dynamic>))
+          .toList();
+    });
+  }
+
+  /// Obtener solicitudes por cliente
+  Future<List<Solicitud>> getSolicitudesByCliente(String clienteId) async {
+    try {
+      final snapshot = await _solicitudesRef
+          .orderByChild('cliente_id')
+          .equalTo(clienteId)
+          .get();
+
+      if (!snapshot.exists) return [];
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      return data.values
+          .map((s) => Solicitud.fromJson(s as Map<dynamic, dynamic>))
+          .toList();
+    } catch (e) {
+      throw 'Error al obtener solicitudes del cliente: ${e.toString()}';
+    }
+  }
+
+  /// Stream de solicitudes por cliente
+  Stream<List<Solicitud>> getSolicitudesByClienteStream(String clienteId) {
+    return _solicitudesRef
+        .orderByChild('cliente_id')
+        .equalTo(clienteId)
+        .onValue
+        .map((event) {
+      if (!event.snapshot.exists) return [];
+      final data = event.snapshot.value as Map<dynamic, dynamic>;
+      return data.values
+          .map((s) => Solicitud.fromJson(s as Map<dynamic, dynamic>))
+          .toList();
+    });
+  }
+
+  /// Actualizar solicitud
+  Future<void> updateSolicitud(String id, Map<String, dynamic> updates) async {
+    try {
+      await _solicitudesRef.child(id).update(updates);
+    } catch (e) {
+      throw 'Error al actualizar solicitud: ${e.toString()}';
+    }
+  }
+
+  /// Eliminar solicitud
+  Future<void> deleteSolicitud(String id) async {
+    try {
+      await _solicitudesRef.child(id).remove();
+    } catch (e) {
+      throw 'Error al eliminar solicitud: ${e.toString()}';
+    }
+  }
+
+  /// Aceptar solicitud
+  Future<void> aceptarSolicitud(
+    String solicitudId,
+    DateTime fechaAceptada,
+    int duracionEstimadaHoras,
+  ) async {
+    try {
+      await _solicitudesRef.child(solicitudId).update({
+        'estado': 'ACEPTADA',
+        'fecha_aceptada': fechaAceptada.toIso8601String(),
+        'duracion_estimada_horas': duracionEstimadaHoras,
+      });
+    } catch (e) {
+      throw 'Error al aceptar solicitud: ${e.toString()}';
+    }
+  }
+
+  /// Rechazar solicitud
+  Future<void> rechazarSolicitud(String solicitudId, String motivoRechazo) async {
+    try {
+      await _solicitudesRef.child(solicitudId).update({
+        'estado': 'RECHAZADA',
+        'motivo_rechazo': motivoRechazo,
+      });
+    } catch (e) {
+      throw 'Error al rechazar solicitud: ${e.toString()}';
+    }
+  }
+
+  /// Agregar propuesta de fecha a solicitud
+  Future<void> agregarPropuestaFecha(
+    String solicitudId,
+    PropuestaFecha propuesta,
+  ) async {
+    try {
+      final solicitud = await getSolicitud(solicitudId);
+      if (solicitud == null) throw 'Solicitud no encontrada';
+
+      final nuevasProupuestas = [...solicitud.historialPropuestas, propuesta];
+
+      await _solicitudesRef.child(solicitudId).update({
+        'historial_propuestas': nuevasProupuestas.map((p) => p.toJson()).toList(),
+      });
+    } catch (e) {
+      throw 'Error al agregar propuesta: ${e.toString()}';
+    }
+  }
+}
